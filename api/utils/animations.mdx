@@ -1,0 +1,234 @@
+---
+title: Animations
+description: GSAP animation utilities and configuration for landing page entrance effects
+---
+
+Shared animation configuration for landing page entrance effects with GSAP. Provides premium spring and tween animations with reduced motion support.
+
+## Configuration
+
+### LANDING_ANIMATION
+
+Main animation configuration object with timing, easing, and spring settings.
+
+<ResponseField name="duration" type="number" default="0.5">
+  Main entrance duration - refined for tween fallback
+</ResponseField>
+
+<ResponseField name="durationReduced" type="number" default="0.01">
+  Reduced motion duration - instant for accessibility
+</ResponseField>
+
+<ResponseField name="stagger" type="number" default="0.08">
+  Stagger delay between items in a list/grid
+</ResponseField>
+
+<ResponseField name="sequenceDelay" type="number" default="0.12">
+  Delay for sequential elements (e.g. h1 -> p -> cta)
+</ResponseField>
+
+<ResponseField name="chainStagger" type="number" default="0.28">
+  Stagger for chain-like sequences (cards one after another)
+</ResponseField>
+
+<ResponseField name="viewportMargin" type="string" default="0px 0px -80px 0px">
+  Viewport margin so elements start animating slightly before fully in view
+</ResponseField>
+
+<ResponseField name="ease" type="'easeOut'" default="easeOut">
+  Easing for entrance - ease-out feels natural
+</ResponseField>
+
+<ResponseField name="spring" type="object">
+  Spring config: subtle organic bounce for cards and key elements
+  - `type`: "spring"
+  - `stiffness`: 90
+  - `damping`: 18
+</ResponseField>
+
+<ResponseField name="springSnappy" type="object">
+  Spring config: snappier for markers/icons
+  - `type`: "spring"
+  - `stiffness`: 120
+  - `damping`: 20
+</ResponseField>
+
+```typescript
+import { LANDING_ANIMATION } from '@/lib/animations'
+
+const duration = LANDING_ANIMATION.duration
+const spring = LANDING_ANIMATION.spring
+```
+
+## Functions
+
+### getTransition
+
+Creates a tween transition configuration with optional delay and reduced motion support.
+
+<ParamField path="options" type="object" required>
+  Transition configuration options
+  
+  <ParamField path="delay" type="number" default="0">
+    Delay before animation starts (in seconds)
+  </ParamField>
+  
+  <ParamField path="duration" type="number" default="LANDING_ANIMATION.duration">
+    Animation duration (in seconds)
+  </ParamField>
+  
+  <ParamField path="reducedMotion" type="boolean | null" default="false">
+    Whether to use reduced motion (accessibility)
+  </ParamField>
+</ParamField>
+
+<ResponseField name="return" type="object">
+  Transition configuration object
+  - `delay`: number - Delay in seconds
+  - `duration`: number - Duration in seconds (reduced if reducedMotion is true)
+  - `ease`: "easeOut" - Easing function
+</ResponseField>
+
+```typescript
+import { getTransition } from '@/lib/animations'
+
+// Basic usage
+const transition = getTransition({ delay: 0.2 })
+
+// With reduced motion
+const accessibleTransition = getTransition({ 
+  delay: 0.1, 
+  reducedMotion: true 
+})
+
+// Custom duration
+const slowTransition = getTransition({ 
+  duration: 1.0, 
+  delay: 0.5 
+})
+```
+
+### getSpringTransition
+
+Creates a spring transition configuration with optional delay, reduced motion support, and snappiness control.
+
+<ParamField path="options" type="object" required>
+  Spring transition configuration options
+  
+  <ParamField path="delay" type="number" default="0">
+    Delay before animation starts (in seconds)
+  </ParamField>
+  
+  <ParamField path="reducedMotion" type="boolean | null" default="false">
+    Whether to use reduced motion (accessibility)
+  </ParamField>
+  
+  <ParamField path="snappy" type="boolean" default="false">
+    Whether to use snappier spring (for markers/icons)
+  </ParamField>
+</ParamField>
+
+<ResponseField name="return" type="object">
+  Spring transition configuration object
+  - When `reducedMotion` is true: `{ delay, duration: 0.01, ease: "easeOut" }`
+  - When `reducedMotion` is false: `{ delay, type: "spring", stiffness, damping }`
+</ResponseField>
+
+```typescript
+import { getSpringTransition } from '@/lib/animations'
+
+// Basic spring animation
+const spring = getSpringTransition({ delay: 0.2 })
+
+// Snappy spring for icons
+const snappySpring = getSpringTransition({ 
+  delay: 0.1, 
+  snappy: true 
+})
+
+// With reduced motion
+const accessibleSpring = getSpringTransition({ 
+  reducedMotion: true 
+})
+
+// Use in Motion component
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={getSpringTransition({ delay: 0.3 })}
+>
+  Content
+</motion.div>
+```
+
+## Usage examples
+
+### Sequential entrance animation
+
+```typescript
+import { getTransition, LANDING_ANIMATION } from '@/lib/animations'
+
+// Heading appears first
+const headingTransition = getTransition({ delay: 0 })
+
+// Paragraph appears after heading
+const paragraphTransition = getTransition({ 
+  delay: LANDING_ANIMATION.sequenceDelay 
+})
+
+// CTA appears last
+const ctaTransition = getTransition({ 
+  delay: LANDING_ANIMATION.sequenceDelay * 2 
+})
+```
+
+### Staggered card grid
+
+```typescript
+import { getSpringTransition, LANDING_ANIMATION } from '@/lib/animations'
+
+const cards = [1, 2, 3, 4]
+
+cards.map((card, index) => (
+  <motion.div
+    key={card}
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={getSpringTransition({ 
+      delay: index * LANDING_ANIMATION.stagger 
+    })}
+  >
+    Card content
+  </motion.div>
+))
+```
+
+### Reduced motion support
+
+```typescript
+import { getTransition } from '@/lib/animations'
+import { useReducedMotion } from 'framer-motion'
+
+function Component() {
+  const prefersReducedMotion = useReducedMotion()
+  
+  const transition = getTransition({ 
+    delay: 0.2,
+    reducedMotion: prefersReducedMotion 
+  })
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={transition}
+    >
+      Content
+    </motion.div>
+  )
+}
+```
+
+## Source
+
+Defined in `lib/animations.ts:7-55`

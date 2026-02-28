@@ -1,0 +1,433 @@
+---
+title: Data management
+description: Static data files, TypeScript types, and data organization patterns in Biovity
+---
+
+## Data organization
+
+Biovity stores static data in `lib/data/` with corresponding TypeScript types in `lib/types/`.
+
+```
+lib/
+├── data/                      # Static data files
+│   ├── trabajos-data.ts      # Job listings
+│   ├── trabajos-filtros-data.ts # Job filters
+│   ├── salarios-data.ts      # Salary information
+│   ├── empresas-data.ts      # Company data
+│   ├── home-data.ts          # Home page content
+│   ├── nosotros-data.ts      # About page content
+│   └── messages-data.ts      # Mock message data
+└── types/                     # TypeScript type definitions
+    ├── trabajos.ts           # Job types
+    ├── salarios.ts           # Salary types
+    ├── empresas.ts           # Company types
+    ├── dashboard.ts          # Dashboard types
+    └── home.ts               # Home page types
+```
+
+## Static data files
+
+### Job listings data
+
+Job data is stored in `lib/data/trabajos-data.ts`:
+
+```typescript
+import type { Trabajo } from "@/lib/types/trabajos"
+
+export const TRABAJOS_MOCK: Trabajo[] = [
+  {
+    id: "1",
+    titulo: "Investigador en Biotecnología",
+    empresa: "BioTech Solutions",
+    ubicacion: "Santiago, Chile",
+    modalidad: "hibrido",
+    formato: "full-time",
+    fechaPublicacion: new Date("2025-01-20"),
+    rangoSalarial: {
+      min: 2500000,
+      max: 3500000,
+      moneda: "CLP",
+    },
+    beneficios: [
+      { tipo: "salud", label: "Seguro de salud y dental" },
+      { tipo: "vacaciones", label: "Vacaciones pagadas" },
+      { tipo: "formacion", label: "Presupuesto para formación" },
+    ],
+    descripcion: "Buscamos un investigador en biotecnología...",
+    requisitos: [
+      "Título profesional en Biotecnología",
+      "Mínimo 2 años de experiencia",
+      "Conocimientos en técnicas de biología molecular",
+    ],
+    responsabilidades: [
+      "Diseñar y ejecutar experimentos",
+      "Analizar resultados",
+      "Preparar informes técnicos",
+    ],
+    categoria: "Biotecnología",
+    experiencia: "mid",
+    slug: "investigador-biotecnologia-biotech-solutions",
+  },
+  // More job listings...
+]
+```
+
+### Filter data
+
+Filter options are stored in `lib/data/trabajos-filtros-data.ts`:
+
+```typescript
+export const MODALIDADES = [
+  { value: "todas", label: "Todas las modalidades" },
+  { value: "remoto", label: "Remoto" },
+  { value: "hibrido", label: "Híbrido" },
+  { value: "presencial", label: "Presencial" },
+]
+
+export const FORMATOS = [
+  { value: "todas", label: "Todos los formatos" },
+  { value: "full-time", label: "Tiempo completo" },
+  { value: "part-time", label: "Medio tiempo" },
+  { value: "contrato", label: "Contrato" },
+]
+
+export const EXPERIENCIA_NIVELES = [
+  { value: "todas", label: "Todos los niveles" },
+  { value: "junior", label: "Junior (0-2 años)" },
+  { value: "mid", label: "Mid (2-5 años)" },
+  { value: "senior", label: "Senior (5+ años)" },
+]
+```
+
+### Content data
+
+Landing page content is stored in dedicated files:
+
+```typescript
+// lib/data/home-data.ts
+export const HOME_CATEGORIES = [
+  {
+    name: "Biotecnología",
+    icon: "Microscope",
+    jobCount: 145,
+    description: "Investigación y desarrollo en biotecnología",
+  },
+  {
+    name: "Química",
+    icon: "Flask",
+    jobCount: 98,
+    description: "Análisis y desarrollo químico",
+  },
+  // More categories...
+]
+
+export const HOME_HOW_IT_WORKS = [
+  {
+    step: 1,
+    title: "Crea tu perfil",
+    description: "Completa tu perfil profesional con tu experiencia y habilidades",
+    icon: "UserCircle",
+  },
+  {
+    step: 2,
+    title: "Explora oportunidades",
+    description: "Busca trabajos que coincidan con tu perfil",
+    icon: "Search",
+  },
+  // More steps...
+]
+```
+
+## TypeScript types
+
+### Job types
+
+Types are defined in `lib/types/trabajos.ts`:
+
+```typescript
+export type ModalidadTrabajo = "remoto" | "hibrido" | "presencial"
+export type FormatoTrabajo = "full-time" | "part-time" | "contrato"
+export type NivelExperiencia = "junior" | "mid" | "senior"
+export type TipoBeneficio = "salud" | "vacaciones" | "formacion" | "equipo" | "otro"
+
+export interface Beneficio {
+  tipo: TipoBeneficio
+  label: string
+}
+
+export interface RangoSalarial {
+  min: number
+  max: number
+  moneda: "CLP"
+}
+
+export interface Trabajo {
+  id: string
+  titulo: string
+  empresa: string
+  ubicacion: string
+  modalidad: ModalidadTrabajo
+  formato: FormatoTrabajo
+  fechaPublicacion: Date
+  rangoSalarial: RangoSalarial
+  beneficios?: Beneficio[]
+  descripcion: string
+  requisitos: string[]
+  responsabilidades: string[]
+  categoria?: string
+  experiencia?: NivelExperiencia
+  slug: string
+}
+
+export interface FiltrosTrabajos {
+  query: string
+  ubicacion: string
+  modalidad: "todas" | ModalidadTrabajo
+  formato: "todas" | FormatoTrabajo
+  salarioMin: number | null
+  salarioMax: number | null
+  experiencia: "todas" | NivelExperiencia
+  categoria: string | null
+}
+```
+
+### Type organization patterns
+
+Each feature has its own type file:
+
+<Tabs>
+  <Tab title="Salary types">
+    ```typescript
+    // lib/types/salarios.ts
+    export interface SalarioData {
+      titulo: string
+      salarioPromedio: number
+      rangoMin: number
+      rangoMax: number
+      moneda: "CLP"
+      experiencia?: string
+    }
+
+    export interface SalarioPorRegion {
+      region: string
+      salarioPromedio: number
+      diferenciaNacional: number
+    }
+    ```
+  </Tab>
+  <Tab title="Dashboard types">
+    ```typescript
+    // lib/types/dashboard.ts
+    export interface MetricCardData {
+      title: string
+      value: number | string
+      change?: number
+      trend?: "up" | "down" | "neutral"
+      icon?: string
+    }
+
+    export interface ApplicationStatus {
+      id: string
+      jobTitle: string
+      company: string
+      status: "pending" | "reviewing" | "interview" | "rejected" | "accepted"
+      appliedDate: Date
+    }
+    ```
+  </Tab>
+  <Tab title="Company types">
+    ```typescript
+    // lib/types/empresas.ts
+    export interface Empresa {
+      id: string
+      nombre: string
+      logo: string
+      sector: string
+      descripcion: string
+      ubicacion: string
+      tamaño: "startup" | "pequeña" | "mediana" | "grande"
+      website?: string
+    }
+
+    export interface PlanPrecio {
+      nombre: string
+      precio: number
+      periodo: "mes" | "año"
+      caracteristicas: string[]
+      destacado?: boolean
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Utility functions
+
+Data formatting utilities are in `lib/utils.ts`:
+
+### Currency formatting
+
+```typescript
+export const formatCurrency = (amount: number, currency: string = "CLP"): string => {
+  return new Intl.NumberFormat("es-CL", {
+    style: "currency",
+    currency: currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
+// Usage
+const salary = formatCurrency(2500000) // "$2.500.000"
+```
+
+### Date formatting
+
+```typescript
+export const formatDate = (date: Date): string => {
+  return new Intl.DateTimeFormat("es-CL", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(date)
+}
+
+export const getRelativeTime = (date: Date): string => {
+  const now = new Date()
+  const diffInMs = now.getTime() - date.getTime()
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
+
+  if (diffInDays === 0) return "Hoy"
+  if (diffInDays === 1) return "Ayer"
+  if (diffInDays < 7) return `Hace ${diffInDays} días`
+  if (diffInDays < 30) return `Hace ${Math.floor(diffInDays / 7)} semanas`
+  return formatDate(date)
+}
+
+// Usage
+const published = getRelativeTime(job.fechaPublicacion) // "Hace 3 días"
+```
+
+### Badge colors
+
+```typescript
+export const getModalidadBadgeColor = (modalidad: ModalidadTrabajo): string => {
+  const colors = {
+    remoto: "bg-blue-100 text-blue-800",
+    hibrido: "bg-purple-100 text-purple-800",
+    presencial: "bg-green-100 text-green-800",
+  }
+  return colors[modalidad]
+}
+
+export const getStatusBadgeColor = (status: ApplicationStatus["status"]): string => {
+  const colors = {
+    pending: "bg-yellow-100 text-yellow-800",
+    reviewing: "bg-blue-100 text-blue-800",
+    interview: "bg-purple-100 text-purple-800",
+    rejected: "bg-red-100 text-red-800",
+    accepted: "bg-green-100 text-green-800",
+  }
+  return colors[status]
+}
+
+// Usage
+<span className={cn("px-2 py-1 rounded text-xs", getModalidadBadgeColor(job.modalidad))}>
+  {job.modalidad}
+</span>
+```
+
+## Data fetching patterns
+
+### Server-side data fetching
+
+For server components, fetch data directly:
+
+```typescript
+// app/trabajos/page.tsx
+import { TRABAJOS_MOCK } from "@/lib/data/trabajos-data"
+
+const getTrabajosFiltered = (filtros: FiltrosTrabajos) => {
+  return TRABAJOS_MOCK.filter((trabajo) => {
+    if (filtros.modalidad !== "todas" && trabajo.modalidad !== filtros.modalidad) {
+      return false
+    }
+    if (filtros.formato !== "todas" && trabajo.formato !== filtros.formato) {
+      return false
+    }
+    return true
+  })
+}
+
+const TrabajosPage = async () => {
+  const trabajos = getTrabajosFiltered({ modalidad: "todas", formato: "todas", /* ... */ })
+
+  return (
+    <div>
+      <h1>Trabajos disponibles</h1>
+      <TrabajosGrid trabajos={trabajos} />
+    </div>
+  )
+}
+
+export default TrabajosPage
+```
+
+### Client-side filtering
+
+For client components, use state:
+
+```typescript
+"use client"
+
+import { useState, useMemo } from "react"
+import { TRABAJOS_MOCK } from "@/lib/data/trabajos-data"
+
+const TrabajosSearch = () => {
+  const [filtros, setFiltros] = useState<FiltrosTrabajos>({
+    query: "",
+    modalidad: "todas",
+    formato: "todas",
+    // ...
+  })
+
+  const trabajosFiltrados = useMemo(() => {
+    return TRABAJOS_MOCK.filter((trabajo) => {
+      if (filtros.query && !trabajo.titulo.toLowerCase().includes(filtros.query.toLowerCase())) {
+        return false
+      }
+      if (filtros.modalidad !== "todas" && trabajo.modalidad !== filtros.modalidad) {
+        return false
+      }
+      return true
+    })
+  }, [filtros])
+
+  return (
+    <div>
+      <SearchFilters filtros={filtros} onChange={setFiltros} />
+      <TrabajosGrid trabajos={trabajosFiltrados} />
+    </div>
+  )
+}
+```
+
+## Mock data for development
+
+All data files use mock data for development:
+
+```typescript
+// lib/data/messages-data.ts
+export const MESSAGES_MOCK = [
+  {
+    id: "1",
+    from: "BioTech Solutions",
+    subject: "Re: Aplicación Investigador",
+    preview: "Gracias por tu interés en la posición...",
+    date: new Date("2025-02-24"),
+    read: false,
+  },
+  // More mock messages...
+]
+```
+
+This allows development without a database connection. Replace with real API calls when integrating with PostgreSQL.

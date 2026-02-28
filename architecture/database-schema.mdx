@@ -1,0 +1,283 @@
+---
+title: Database schema
+description: PostgreSQL schema with Better Auth tables and custom application tables
+---
+
+Biovity uses PostgreSQL as the primary database, with Better Auth managing authentication tables and custom tables for application-specific data.
+
+## Database connection
+
+The app uses a shared PostgreSQL connection pool configured in `lib/db/index.ts`:
+
+```typescript title="lib/db/index.ts"
+import { Pool } from "pg"
+
+const poolConfig = {
+  connectionString: process.env.DATABASE_URL,
+  // Prevent exhausting DB connections (default pg max=10)
+  max: 10,
+  // Reclaim idle connections after 30s
+  idleTimeoutMillis: 30_000,
+  // Fail fast if connection takes > 5s
+  connectionTimeoutMillis: 5_000,
+}
+
+export const pool = new Pool(poolConfig)
+```
+
+### Connection pool best practices
+
+<AccordionGroup>
+  <Accordion title="Single shared pool">
+    One pool instance is reused across the entire application to avoid connection exhaustion.
+  </Accordion>
+
+  <Accordion title="Connection limits">
+    Maximum of 10 connections prevents memory exhaustion and respects PostgreSQL limits.
+  </Accordion>
+
+  <Accordion title="Idle timeout">
+    Connections idle for 30+ seconds are reclaimed to free up resources.
+  </Accordion>
+
+  <Accordion title="Fast failure">
+    5-second connection timeout ensures the app doesn't hang waiting for unavailable connections.
+  </Accordion>
+</AccordionGroup>
+
+## Better Auth tables
+
+Better Auth automatically creates and manages these tables:
+
+### User table
+
+```sql
+CREATE TABLE "user" (
+  id text PRIMARY KEY,
+  email text UNIQUE NOT NULL,
+  name text,
+  "isEmailVerified" boolean DEFAULT false,
+  "createdAt" timestamptz NOT NULL DEFAULT now(),
+  "updatedAt" timestamptz NOT NULL DEFAULT now(),
+  
+  -- Custom fields
+  "isActive" boolean DEFAULT true,
+  avatar text,
+  profession text NOT NULL,
+  "verificationToken" text,
+  type text NOT NULL,  -- 'employee' or 'organization'
+  "organizationId" text
+);
+```
+
+#### Custom user fields
+
+<AccordionGroup>
+  <Accordion title="type (required)">
+    Determines user role: `'employee'` for job seekers or `'organization'` for companies.
+  </Accordion>
+
+  <Accordion title="profession (required)">
+    User's profession (e.g., "Biotechnologist", "Chemical Engineer"). Required for all employees.
+  </Accordion>
+
+  <Accordion title="avatar (optional)">
+    URL to user's profile picture. Can be uploaded or set to a default.
+  </Accordion>
+
+  <Accordion title="isActive (optional)">
+    Account status flag. Inactive users cannot log in.
+  </Accordion>
+
+  <Accordion title="organizationId (optional)">
+    Foreign key linking employees to their organization. Used for organization-managed accounts.
+  </Accordion>
+
+  <Accordion title="verificationToken (optional)">
+    Token for email verification flow. Set on registration, cleared on verification.
+  </Accordion>
+</AccordionGroup>
+
+### Account table
+
+```sql
+CREATE TABLE "account" (
+  id text PRIMARY KEY,
+  "user_id" text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  provider text NOT NULL,
+  "provideraccountid" text NOT NULL,
+  "access_token" text,
+  "refresh_token" text,
+  "expires_at" bigint,
+  "refreshTokenExpiresAt" bigint,
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "updated_at" timestamptz NOT NULL DEFAULT now(),
+  
+  UNIQUE(provider, "provideraccountid")
+);
+```
+
+Stores OAuth provider accounts (future: Google, LinkedIn). Currently only email/password is enabled.
+
+### Session table
+
+```sql
+CREATE TABLE "session" (
+  id text PRIMARY KEY,
+  "user_id" text NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  token text UNIQUE NOT NULL,
+  "expires_at" timestamptz NOT NULL,
+  "ip_address" text,
+  "user_agent" text,
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "updated_at" timestamptz NOT NULL DEFAULT now()
+);
+```
+
+#### Session configuration
+
+- **Expiry**: 7 days (604,800 seconds)
+- **Update age**: Sessions refresh after 1 day of activity
+- **Cookie cache**: 5-minute cache for session cookies to reduce DB queries
+
+### Verification table
+
+```sql
+CREATE TABLE "verification" (
+  id text PRIMARY KEY,
+  identifier text NOT NULL,
+  value text NOT NULL,
+  "expiresAt" timestamptz NOT NULL,
+  "createdAt" timestamptz NOT NULL DEFAULT now(),
+  "updatedAt" timestamptz NOT NULL DEFAULT now()
+);
+```
+
+Stores email verification tokens, password reset tokens, and other verification data.
+
+## Application tables
+
+### Waitlist table
+
+```sql title="lib/db/migrations/001_waitlist.sql"
+CREATE TABLE IF NOT EXISTS waitlist (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  email text NOT NULL,
+  role text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Unique constraint for duplicate email prevention
+ALTER TABLE waitlist 
+  ADD CONSTRAINT waitlist_email_key UNIQUE (email);
+
+-- Index on email for fast lookups
+CREATE INDEX waitlist_email_idx ON waitlist (email);
+
+-- Index on role for filtering
+CREATE INDEX waitlist_role_idx ON waitlist (role);
+```
+
+#### Schema best practices
+
+<AccordionGroup>
+  <Accordion title="Primary keys">
+    Uses `bigint GENERATED ALWAYS AS IDENTITY` for sequential IDs following PostgreSQL best practices.
+  </Accordion>
+
+  <Accordion title="Lowercase identifiers">
+    All table and column names use snake_case for consistency with PostgreSQL conventions.
+  </Accordion>
+
+  <Accordion title="Indexes">
+    - `waitlist_email_idx`: Fast lookups and UNIQUE constraint enforcement
+    - `waitlist_role_idx`: Filter by role in admin dashboards
+  </Accordion>
+
+  <Accordion title="Unique constraints">
+    Email uniqueness prevents duplicate signups. API returns 409 Conflict on violation (error code 23505).
+  </Accordion>
+</AccordionGroup>
+
+## Migrations
+
+Database migrations are stored in `lib/db/migrations/` and applied manually:
+
+```bash
+# Apply migration
+psql $DATABASE_URL -f lib/db/migrations/001_waitlist.sql
+```
+
+### Migration tracking
+
+Migrations are tracked in a `migrations` table:
+
+```sql
+CREATE TABLE IF NOT EXISTS migrations (
+  timestamp bigint PRIMARY KEY,
+  name text NOT NULL
+);
+
+-- Register migration
+INSERT INTO migrations (timestamp, name)
+SELECT 1737450000000, '001_waitlist'
+WHERE NOT EXISTS (
+  SELECT 1 FROM migrations WHERE name = '001_waitlist'
+);
+```
+
+This ensures migrations are idempotent and can be safely re-run.
+
+## Environment variables
+
+```bash title=".env.local"
+DATABASE_URL=postgresql://user:password@host:port/database
+```
+
+The connection string supports both direct connections and poolers (e.g., Supabase Pooler).
+
+## Query patterns
+
+### Using the connection pool
+
+```typescript
+import { pool } from "@/lib/db"
+
+// Parameterized query (prevents SQL injection)
+const result = await pool.query(
+  "SELECT * FROM waitlist WHERE email = $1",
+  [email]
+)
+
+// Insert with RETURNING
+const { rows } = await pool.query(
+  "INSERT INTO waitlist (email, role) VALUES ($1, $2) RETURNING *",
+  [email, role]
+)
+```
+
+### Error handling
+
+```typescript
+try {
+  await pool.query("INSERT INTO waitlist (email, role) VALUES ($1, $2)", [
+    email,
+    role,
+  ])
+} catch (error) {
+  // Handle unique constraint violation (duplicate email)
+  if (error.code === "23505") {
+    return { error: "Email already on waitlist" }
+  }
+  throw error
+}
+```
+
+## Best practices
+
+- Use parameterized queries (`$1`, `$2`) to prevent SQL injection
+- Create indexes on columns used in WHERE clauses and JOINs
+- Use `RETURNING *` to get inserted/updated rows without additional queries
+- Handle PostgreSQL error codes (e.g., `23505` for unique violations)
+- Keep migrations idempotent with `IF NOT EXISTS` and `WHERE NOT EXISTS`
+- Use `snake_case` for database identifiers, `camelCase` in TypeScript

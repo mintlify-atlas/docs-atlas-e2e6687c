@@ -1,0 +1,194 @@
+---
+title: Production build
+description: Build and prepare Biovity for production deployment
+---
+
+Learn how to build Biovity for production and understand the build process.
+
+## Build process overview
+
+Biovity uses Next.js 16 with Turbopack for fast builds. The production build compiles your application, optimizes assets, and prepares everything for deployment.
+
+## Build commands
+
+### Production build
+
+Create an optimized production build:
+
+```bash
+bun build
+```
+
+This command runs `next build --turbopack`, which:
+- Compiles TypeScript to JavaScript
+- Bundles and optimizes all pages and components
+- Generates static pages where possible
+- Optimizes images and assets
+- Creates production-ready output in `.next` directory
+
+### Start production server
+
+After building, start the production server locally:
+
+```bash
+bun start
+```
+
+This runs `next start` and serves your built application on port 3000.
+
+### Development server
+
+For development with hot reload:
+
+```bash
+bun dev
+```
+
+This starts the Next.js development server with Turbopack for fast refresh.
+
+## Pre-build checks
+
+Before building for production, run these checks to ensure code quality:
+
+<Steps>
+  <Step title="Type check">
+    Verify TypeScript types are correct:
+    
+    ```bash
+    bun typecheck
+    ```
+    
+    This runs `tsc --noEmit` to check for type errors without generating output files.
+  </Step>
+  
+  <Step title="Lint and format">
+    Check and fix code style issues with Biome:
+    
+    ```bash
+    bun check
+    ```
+    
+    This runs `biome check --write .` to lint and auto-fix formatting issues.
+  </Step>
+  
+  <Step title="Run the build">
+    Build the production bundle:
+    
+    ```bash
+    bun build
+    ```
+  </Step>
+</Steps>
+
+## Build configuration
+
+Biovity's build is configured with the following optimizations:
+
+### Turbopack
+
+The project uses Turbopack (`--turbopack` flag) for faster builds. Turbopack is Next.js's Rust-based bundler that provides:
+- Faster incremental builds
+- Improved development experience
+- Better memory efficiency
+
+### Code quality
+
+Biome is configured for strict code quality:
+- Line width: 100 characters
+- Semicolons: as needed
+- Strict linting rules with recommended and stylistic rules enabled
+- TypeScript strict mode with `noExplicitAny` as error
+
+### Dependencies
+
+Trusted dependencies that can run install scripts:
+- `sharp` - Image optimization
+- `unrs-resolver` - Module resolution
+
+## Build output
+
+After a successful build, you'll find:
+
+- `.next/` - Production build output (do not commit to version control)
+- `.next/static/` - Static assets (CSS, JS, images)
+- `.next/server/` - Server-side code
+- `.next/cache/` - Build cache for faster subsequent builds
+
+<Warning>
+  Never commit the `.next` directory to version control. Add it to your `.gitignore` file.
+</Warning>
+
+## Build errors
+
+If your build fails, check for:
+
+### Type errors
+
+```bash
+bun typecheck
+```
+
+Fix any TypeScript errors before building.
+
+### Linting errors
+
+```bash
+bun lint
+```
+
+Biome will report code quality issues that need to be resolved.
+
+### Environment variables
+
+Ensure all required environment variables are set. See the [environment variables](/deployment/environment-variables) guide for details.
+
+### Missing dependencies
+
+Install all dependencies:
+
+```bash
+bun install
+```
+
+## CI/CD integration
+
+For automated builds in CI/CD pipelines:
+
+```bash
+# Install dependencies
+bun install
+
+# Run checks
+bun typecheck
+bun check
+
+# Build for production
+bun build
+```
+
+<Info>
+  Most deployment platforms like Vercel automatically detect and run the build command. You typically don't need to configure this manually.
+</Info>
+
+## Performance optimization
+
+The build process includes several automatic optimizations:
+
+- **Code splitting** - Splits code into smaller chunks for faster loading
+- **Tree shaking** - Removes unused code from the bundle
+- **Minification** - Compresses JavaScript and CSS
+- **Image optimization** - Automatically optimizes images with `sharp`
+- **Static generation** - Pre-renders pages at build time where possible
+
+## Build time expectations
+
+Typical build times:
+- Small projects: 30-60 seconds
+- Medium projects: 1-2 minutes
+- Large projects: 2-5 minutes
+
+Factors affecting build time:
+- Number of pages and components
+- Size and number of dependencies
+- Static generation vs server-side rendering
+- Image optimization workload

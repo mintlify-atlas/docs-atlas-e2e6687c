@@ -1,0 +1,268 @@
+---
+title: Vercel deployment
+description: Deploy Biovity to Vercel with automatic builds and environment configuration
+---
+
+Biovity is optimized for deployment on Vercel, the platform built by the creators of Next.js.
+
+## Prerequisites
+
+Before deploying to Vercel, ensure you have:
+
+- A Vercel account (sign up at [vercel.com](https://vercel.com))
+- Your GitHub, GitLab, or Bitbucket repository connected
+- PostgreSQL database ready (e.g., Supabase)
+- All required environment variables prepared
+
+## Quick deployment
+
+<Steps>
+  <Step title="Import your repository">
+    1. Log in to your Vercel dashboard
+    2. Click "Add New" > "Project"
+    3. Import your Git repository
+    4. Select the repository containing Biovity
+  </Step>
+  
+  <Step title="Configure project settings">
+    Vercel automatically detects Next.js projects. Verify these settings:
+    
+    - **Framework Preset:** Next.js
+    - **Root Directory:** `./` (or your source directory)
+    - **Build Command:** `bun build` or `next build --turbopack`
+    - **Output Directory:** `.next` (automatic)
+    - **Install Command:** `bun install` or `npm install`
+  </Step>
+  
+  <Step title="Add environment variables">
+    Add all required environment variables in the Vercel dashboard:
+    
+    1. Go to "Environment Variables" section
+    2. Add each variable from your `.env.example`:
+       - `DATABASE_URL`
+       - `BETTER_AUTH_SECRET`
+       - `BETTER_AUTH_URL`
+       - `NEXT_PUBLIC_APP_URL`
+       - `NEXT_PUBLIC_SITE_URL`
+    3. Select environments: Production, Preview, Development
+    
+    See the [environment variables](/deployment/environment-variables) guide for details.
+  </Step>
+  
+  <Step title="Deploy">
+    Click "Deploy" and Vercel will:
+    
+    1. Clone your repository
+    2. Install dependencies
+    3. Run the build command
+    4. Deploy your application
+    5. Assign a production URL
+  </Step>
+</Steps>
+
+<Info>
+  Your first deployment may take 2-5 minutes. Subsequent deployments are typically faster due to caching.
+</Info>
+
+## Vercel configuration
+
+Biovity includes a `vercel.json` configuration file for advanced settings.
+
+### Cron jobs
+
+The project includes a cron job configuration:
+
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "0 10 */5 * *"
+    }
+  ]
+}
+```
+
+This cron job:
+- **Path:** `/api/cron` - The API endpoint to call
+- **Schedule:** `0 10 */5 * *` - Runs at 10:00 AM every 5 days
+- **Format:** Standard cron expression format
+
+<Warning>
+  Vercel Cron Jobs are only available on Pro and Enterprise plans. If you're on the Hobby plan, you'll need to use an external cron service or upgrade your plan.
+</Warning>
+
+## Domain configuration
+
+<Steps>
+  <Step title="Add custom domain">
+    In your Vercel project settings:
+    
+    1. Go to "Settings" > "Domains"
+    2. Add your custom domain (e.g., `yourdomain.com`)
+    3. Follow the DNS configuration instructions
+  </Step>
+  
+  <Step title="Update environment variables">
+    After adding your domain, update these variables:
+    
+    ```
+    BETTER_AUTH_URL="https://yourdomain.com"
+    NEXT_PUBLIC_APP_URL="https://yourdomain.com"
+    NEXT_PUBLIC_SITE_URL="https://yourdomain.com"
+    ```
+  </Step>
+  
+  <Step title="Redeploy">
+    Trigger a new deployment for the environment variable changes to take effect.
+  </Step>
+</Steps>
+
+## Automatic deployments
+
+Vercel automatically deploys your application when you push to Git:
+
+- **Production deployments:** Triggered by pushes to your main/master branch
+- **Preview deployments:** Created for every pull request
+- **Branch deployments:** Each branch gets its own preview URL
+
+### Preview deployments
+
+Preview deployments are perfect for testing changes before merging:
+
+- Each PR gets a unique URL
+- Environment variables can be configured separately for previews
+- Automatic comments on PRs with deployment status
+
+## Environment-specific variables
+
+You can set different values for each environment:
+
+- **Production:** Used for your production domain
+- **Preview:** Used for PR previews and branch deployments
+- **Development:** Used when developing locally with Vercel CLI
+
+<Tip>
+  Use different database instances for production and preview environments to avoid data conflicts during testing.
+</Tip>
+
+## Performance monitoring
+
+Vercel provides built-in monitoring tools:
+
+### Analytics
+
+Biovity includes `@vercel/analytics` for tracking:
+- Page views
+- User interactions
+- Web vitals
+
+No additional configuration needed - automatically enabled on Vercel.
+
+### Speed Insights
+
+Biovity includes `@vercel/speed-insights` for performance monitoring:
+- Core Web Vitals
+- Real user metrics
+- Performance scores
+
+View insights in the "Analytics" tab of your Vercel dashboard.
+
+## Build settings
+
+### Recommended settings
+
+```bash
+# Build Command
+bun build
+# or
+next build --turbopack
+
+# Install Command
+bun install
+# or
+npm install
+
+# Development Command
+bun dev
+# or
+next dev --turbopack
+```
+
+### Node.js version
+
+Vercel automatically uses the latest LTS Node.js version. To specify a version, add to `package.json`:
+
+```json
+{
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
+```
+
+## Troubleshooting
+
+### Build fails
+
+1. Check build logs in Vercel dashboard
+2. Verify all environment variables are set
+3. Ensure dependencies are installed correctly
+4. Run `bun typecheck` and `bun check` locally
+
+### Authentication issues
+
+If Better Auth doesn't work after deployment:
+
+1. Verify `BETTER_AUTH_URL` matches your production URL
+2. Check that `BETTER_AUTH_SECRET` is set in Vercel environment variables
+3. Ensure the auth API route is accessible at `/api/auth/[...all]`
+
+### Database connection errors
+
+1. Verify `DATABASE_URL` is correct
+2. Check that your database allows connections from Vercel's IP ranges
+3. For Supabase, ensure you're using the connection pooler URL
+
+### Cron job not running
+
+1. Verify you're on a Pro or Enterprise plan
+2. Check the cron schedule syntax in `vercel.json`
+3. View cron job logs in Vercel dashboard under "Cron Jobs"
+
+## Security best practices
+
+<Warning>
+  Never commit sensitive environment variables to your repository. Always use Vercel's environment variable management.
+</Warning>
+
+- Generate unique secrets for production using `openssl rand -base64 32`
+- Use different database credentials for production and preview
+- Enable Vercel's "Automatically expose System Environment Variables" only if needed
+- Regularly rotate authentication secrets
+- Use Vercel's IP allowlisting for sensitive API routes
+
+## CLI deployment
+
+You can also deploy using the Vercel CLI:
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Login
+vercel login
+
+# Deploy to preview
+vercel
+
+# Deploy to production
+vercel --prod
+```
+
+## Resources
+
+- [Vercel Documentation](https://vercel.com/docs)
+- [Next.js on Vercel](https://vercel.com/docs/frameworks/nextjs)
+- [Environment Variables Guide](https://vercel.com/docs/environment-variables)
+- [Cron Jobs Documentation](https://vercel.com/docs/cron-jobs)

@@ -1,0 +1,184 @@
+---
+title: Database setup
+description: Set up PostgreSQL database and run migrations
+---
+
+Biovity uses PostgreSQL as its database. Follow these steps to set up your local database and run migrations.
+
+## Prerequisites
+
+Before setting up the database, ensure you have:
+
+- PostgreSQL installed locally or access to a hosted instance (e.g., Supabase)
+- Database credentials configured in `.env.local`
+
+## Install PostgreSQL locally
+
+If you don't have PostgreSQL installed:
+
+<Steps>
+  <Step title="Download PostgreSQL">
+    Download and install PostgreSQL from [postgresql.org](https://www.postgresql.org/download/)
+
+    Or use a package manager:
+
+    <CodeGroup>
+      ```bash macOS (Homebrew)
+      brew install postgresql@16
+      brew services start postgresql@16
+      ```
+
+      ```bash Ubuntu/Debian
+      sudo apt update
+      sudo apt install postgresql postgresql-contrib
+      sudo systemctl start postgresql
+      ```
+
+      ```bash Windows (Chocolatey)
+      choco install postgresql
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Create a database">
+    Create a new database for Biovity:
+
+    ```bash
+    # Connect to PostgreSQL
+    psql -U postgres
+
+    # Create database
+    CREATE DATABASE biovity;
+
+    # Exit psql
+    \q
+    ```
+  </Step>
+
+  <Step title="Update connection string">
+    Update your `.env.local` with the local database credentials:
+
+    ```bash .env.local
+    DATABASE_URL="postgresql://postgres:password@localhost:5432/biovity"
+    ```
+  </Step>
+</Steps>
+
+## Using Supabase (recommended)
+
+For a managed PostgreSQL instance, you can use Supabase:
+
+<Steps>
+  <Step title="Create a Supabase project">
+    1. Go to [supabase.com](https://supabase.com)
+    2. Create a new project
+    3. Wait for the database to be provisioned
+  </Step>
+
+  <Step title="Get connection string">
+    1. Navigate to **Settings** > **Database**
+    2. Copy the **Connection string** under "Connection pooling"
+    3. Replace `[YOUR-PASSWORD]` with your database password
+  </Step>
+
+  <Step title="Update environment variable">
+    Add the connection string to your `.env.local`:
+
+    ```bash .env.local
+    DATABASE_URL="postgresql://postgres.xxxxx:password@aws-0-us-west-1.pooler.supabase.com:5432/postgres"
+    ```
+  </Step>
+</Steps>
+
+## Run database migrations
+
+<Note>
+Biovity's database migrations are located in `lib/db/migrations/`. The migration system is managed through Better Auth's schema setup.
+</Note>
+
+To initialize the database schema:
+
+<Steps>
+  <Step title="Verify database connection">
+    Test your database connection by checking if the connection string is valid:
+
+    ```bash
+    # Using psql
+    psql "$DATABASE_URL" -c "SELECT version();"
+    ```
+
+    If the connection is successful, you'll see the PostgreSQL version.
+  </Step>
+
+  <Step title="Run migrations">
+    Better Auth automatically creates required tables on first run. Start the development server to initialize the schema:
+
+    <CodeGroup>
+      ```bash bun
+      bun dev
+      ```
+
+      ```bash npm
+      npm run dev
+      ```
+    </CodeGroup>
+
+    The authentication tables will be created automatically, including:
+    - `user` - User accounts
+    - `session` - Active sessions
+    - `account` - OAuth accounts
+    - Custom fields: `type`, `profession`, `avatar`, `isActive`, `organizationId`
+  </Step>
+</Steps>
+
+## Database architecture
+
+Biovity uses a connection pooling strategy for PostgreSQL:
+
+- **Connection pool** - Shared connection pool in `lib/db/index.ts`
+- **Connection limits** - Configured for optimal performance
+- **Idle timeout** - Prevents stale connections
+
+<Note>
+For production best practices, refer to the `docs/POSTGRES-BEST-PRACTICES.md` file in the Biovity repository.
+</Note>
+
+## Verify database setup
+
+To verify your database is set up correctly:
+
+1. Check that tables were created:
+   ```bash
+   psql "$DATABASE_URL" -c "\dt"
+   ```
+
+2. Verify Better Auth tables exist:
+   - `user`
+   - `session`
+   - `account`
+
+## Troubleshooting
+
+### Connection refused
+
+If you see "connection refused" errors:
+- Verify PostgreSQL is running: `pg_isready`
+- Check the port is correct (default: 5432)
+- Ensure the host is accessible
+
+### Authentication failed
+
+- Verify username and password in `DATABASE_URL`
+- Check database exists: `psql -U postgres -l`
+- Ensure user has proper permissions
+
+### SSL errors with Supabase
+
+If you encounter SSL errors, append `?sslmode=require` to your connection string:
+```bash
+DATABASE_URL="postgresql://...?sslmode=require"
+```
+
+## Next steps
+
+After setting up the database, proceed to [running locally](/getting-started/running-locally) to start the development server.

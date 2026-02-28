@@ -1,0 +1,319 @@
+---
+title: Session management
+description: Session validation, retrieval, and management for Biovity authentication
+---
+
+Manage user sessions, validate authentication status, and handle session lifecycle.
+
+## Get current session
+
+Retrieve the currently authenticated user's session information.
+
+### Endpoint
+
+```
+GET /api/auth/session
+```
+
+### Request
+
+No request body required. Authentication is handled via session cookie.
+
+### Response
+
+#### Success response
+
+<ResponseField name="session" type="object">
+  Current session information
+  
+  <ResponseField name="user_id" type="string">
+    User ID associated with the session
+  </ResponseField>
+  
+  <ResponseField name="token" type="string">
+    Session token
+  </ResponseField>
+  
+  <ResponseField name="expires_at" type="string">
+    Session expiration timestamp (ISO 8601)
+  </ResponseField>
+  
+  <ResponseField name="ip_address" type="string">
+    IP address from session creation
+  </ResponseField>
+  
+  <ResponseField name="user_agent" type="string">
+    User agent from session creation
+  </ResponseField>
+  
+  <ResponseField name="created_at" type="string">
+    Session creation timestamp (ISO 8601)
+  </ResponseField>
+  
+  <ResponseField name="updated_at" type="string">
+    Last session update timestamp (ISO 8601)
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="user" type="object">
+  User information (same structure as login response)
+</ResponseField>
+
+#### Success example
+
+```json
+{
+  "session": {
+    "user_id": "550e8400-e29b-41d4-a716-446655440000",
+    "token": "session_abc123def456",
+    "expires_at": "2026-03-07T14:22:00.000Z",
+    "ip_address": "192.168.1.100",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)...",
+    "created_at": "2026-02-28T14:22:00.000Z",
+    "updated_at": "2026-02-28T14:22:00.000Z"
+  },
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "type": "employee",
+    "profession": "Biotechnology Engineer",
+    "avatar": "https://example.com/avatar.jpg",
+    "isActive": true,
+    "organizationId": null,
+    "isEmailVerified": true,
+    "createdAt": "2026-01-15T10:30:00.000Z",
+    "updatedAt": "2026-02-28T14:22:00.000Z"
+  }
+}
+```
+
+#### Unauthenticated response
+
+```json
+{
+  "session": null,
+  "user": null
+}
+```
+
+## End session
+
+Log out the current user and invalidate their session.
+
+### Endpoint
+
+```
+POST /api/auth/sign-out
+```
+
+### Request
+
+No request body required. Authentication is handled via session cookie.
+
+### Response
+
+#### Success response
+
+```json
+{
+  "success": true
+}
+```
+
+## Client usage
+
+### Get session with React hook
+
+Use the `useSession` hook to access session data:
+
+```typescript
+import { useSession } from "@/lib/auth-client"
+
+export const UserProfile = () => {
+  const { data: session, isPending } = useSession()
+
+  if (isPending) {
+    return <div>Loading...</div>
+  }
+
+  if (!session) {
+    return <div>Not authenticated</div>
+  }
+
+  return (
+    <div>
+      <h1>Welcome, {session.user.name}</h1>
+      <p>Email: {session.user.email}</p>
+      <p>Type: {session.user.type}</p>
+      <p>Profession: {session.user.profession}</p>
+    </div>
+  )
+}
+```
+
+### Sign out
+
+Use the `signOut` method to end the session:
+
+```typescript
+import { signOut } from "@/lib/auth-client"
+
+export const LogoutButton = () => {
+  const handleLogout = async () => {
+    await signOut()
+    window.location.href = "/login"
+  }
+
+  return <button onClick={handleLogout}>Log out</button>
+}
+```
+
+### Full component example
+
+```typescript components/common/LogoutButton.tsx
+import { signOut } from "@/lib/auth-client"
+
+const LogoutButton = () => {
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      window.location.href = "/login"
+    } catch (error) {
+      console.error("Logout failed:", error)
+    }
+  }
+
+  return (
+    <button
+      onClick={handleSignOut}
+      className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
+    >
+      Log out
+    </button>
+  )
+}
+
+export default LogoutButton
+```
+
+### Protected route example
+
+```typescript
+import { useSession } from "@/lib/auth-client"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
+
+export const ProtectedPage = () => {
+  const { data: session, isPending } = useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.push("/login")
+    }
+  }, [session, isPending, router])
+
+  if (isPending) {
+    return <div>Loading...</div>
+  }
+
+  if (!session) {
+    return null // Will redirect
+  }
+
+  return <div>Protected content for {session.user.name}</div>
+}
+```
+
+## Session configuration
+
+### Expiration and refresh
+
+<ParamField path="expiresIn" type="number" default="604800">
+  Session expires after **7 days** (604,800 seconds)
+</ParamField>
+
+<ParamField path="updateAge" type="number" default="86400">
+  Sessions automatically refresh after **1 day** of activity (86,400 seconds)
+</ParamField>
+
+When a user makes a request with a session older than 1 day but not yet expired, Better Auth automatically extends the session expiration.
+
+### Cookie caching
+
+<ParamField path="cookieCache.enabled" type="boolean" default="true">
+  Enable cookie-based session caching for improved performance
+</ParamField>
+
+<ParamField path="cookieCache.maxAge" type="number" default="300">
+  Cache sessions in cookies for **5 minutes** (300 seconds) to reduce database queries
+</ParamField>
+
+### Session tracking
+
+Each session stores:
+
+- **IP address**: Client IP address at session creation
+- **User agent**: Browser/client information at session creation
+- **Timestamps**: Creation and last update times
+
+This information is useful for security auditing and detecting suspicious activity.
+
+## Security considerations
+
+### Secure cookies
+
+In production, session cookies use secure flags:
+
+```typescript
+advanced: {
+  useSecureCookies: process.env.NODE_ENV === "production",
+}
+```
+
+This ensures cookies are only transmitted over HTTPS in production.
+
+### Session validation
+
+Better Auth automatically validates:
+
+- Session token signature
+- Session expiration timestamp
+- User account status
+
+Invalid or expired sessions return `null` from the session endpoint.
+
+### Rate limiting
+
+Session endpoints are subject to the same rate limiting as other authentication endpoints:
+
+- **Window**: 60 seconds
+- **Max requests**: 10 per IP address
+
+## Database schema
+
+Sessions are stored in the `session` table with custom field mappings:
+
+```typescript
+session: {
+  modelName: "session",
+  fields: {
+    userId: "user_id",
+    expiresAt: "expires_at",
+    token: "token",
+    ipAddress: "ip_address",
+    userAgent: "user_agent",
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  },
+}
+```
+
+## Session lifecycle
+
+1. **Creation**: Session created on successful login or registration
+2. **Validation**: Each request validates session token and expiration
+3. **Refresh**: Sessions auto-refresh after 1 day of activity
+4. **Expiration**: Sessions expire after 7 days without activity
+5. **Cleanup**: Expired sessions are automatically removed from the database

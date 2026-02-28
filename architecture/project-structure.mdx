@@ -1,0 +1,167 @@
+---
+title: Project structure
+description: Directory organization and file structure of the Biovity codebase
+---
+
+Biovity follows a clean, feature-based directory structure optimized for Next.js 16 App Router. The codebase is organized into three main directories: `app/`, `components/`, and `lib/`.
+
+## Overview
+
+```
+biovity/
+├── app/                        # Next.js App Router
+├── components/                 # React components
+├── lib/                        # Core utilities and config
+├── public/                     # Static assets
+└── package.json
+```
+
+## App Router directory
+
+The `app/` directory contains all routes, layouts, and API endpoints following Next.js 16 App Router conventions.
+
+```
+app/
+├── api/
+│   └── auth/[...all]/route.ts    # Better Auth API endpoint
+├── dashboard/
+│   ├── admin/                    # Admin dashboard routes
+│   └── employee/                 # Employee dashboard (nested layout)
+│       ├── applications/         # Job applications management
+│       ├── calendar/            # Calendar integration
+│       ├── messages/            # Internal messaging
+│       ├── metrics/             # User analytics
+│       ├── my-applications/     # User's job applications
+│       ├── profile/             # User profile settings
+│       ├── saved/               # Saved job postings
+│       ├── search/              # Job search interface
+│       ├── layout.tsx           # Dashboard layout wrapper
+│       └── page.tsx             # Dashboard home
+├── empresas/                     # Companies landing page
+├── login/                        # Login page (user/org)
+├── nosotros/                     # About us page
+├── page.tsx                      # Home page
+├── register/                     # Registration page (user/org)
+├── salarios/                     # Salary information
+└── trabajos/                     # Public job board
+```
+
+### Key features
+
+- **Role-based routing**: Separate dashboards for employees and admins
+- **Nested layouts**: Dashboard uses nested layout for consistent sidebar/navigation
+- **API routes**: Better Auth endpoint at `/api/auth/*`
+- **Public pages**: Landing pages for companies, about, salaries, and job listings
+
+## Components directory
+
+Components are organized by feature and context, following a hierarchical structure from common to specific.
+
+```
+components/
+├── common/                       # Shared across all pages
+│   ├── Footer.tsx
+│   ├── Header.tsx
+│   └── LogoutButton.tsx
+├── landing/                      # Landing page components
+│   ├── home/                    # Home page specific
+│   ├── empresas/                # Companies page specific
+│   └── nosotros/                # About page specific
+├── dashboard/
+│   └── employee/                # Dashboard tab components
+├── layouts/                      # Layout wrappers
+│   └── LandingLayout.tsx
+└── ui/                          # Base UI components (shadcn/radix)
+    ├── button.tsx
+    ├── card.tsx
+    ├── input.tsx
+    └── ...
+```
+
+### Organization principles
+
+<AccordionGroup>
+  <Accordion title="Feature-based grouping">
+    Components are grouped by the feature or page they belong to (`landing/home/`, `dashboard/employee/`), making it easy to find related components.
+  </Accordion>
+
+  <Accordion title="Reusable UI layer">
+    The `ui/` directory contains base components from Radix UI and shadcn, providing accessible, composable primitives.
+  </Accordion>
+
+  <Accordion title="Common components">
+    Shared components like `Header`, `Footer`, and `LogoutButton` live in `common/` and are used across multiple pages.
+  </Accordion>
+</AccordionGroup>
+
+## Library directory
+
+The `lib/` directory contains core configuration, utilities, and type definitions.
+
+```
+lib/
+├── auth.ts                      # Better Auth server config
+├── auth-client.ts               # Better Auth client config
+├── db/
+│   ├── index.ts                # PostgreSQL connection pool
+│   ├── migrations/             # Database migrations
+│   │   └── 001_waitlist.sql
+│   └── waitlist.ts             # Waitlist queries
+├── data/                        # Static data files
+│   ├── jobs.ts                 # Job listings data
+│   ├── categories.ts           # Job categories
+│   └── filters.ts              # Search filters
+├── types/                       # TypeScript definitions
+│   ├── job.ts
+│   ├── user.ts
+│   └── ...
+└── utils.ts                     # Utility functions
+```
+
+### Key files
+
+<AccordionGroup>
+  <Accordion title="Authentication (auth.ts, auth-client.ts)">
+    - `auth.ts`: Server-side Better Auth configuration with database pool, rate limiting, and session settings
+    - `auth-client.ts`: Client-side auth client with typed hooks (`useSession`, `signIn`, `signOut`)
+  </Accordion>
+
+  <Accordion title="Database (db/)">
+    - `index.ts`: Shared PostgreSQL connection pool with connection limits and timeout configuration
+    - `migrations/`: SQL migration files for schema management
+    - Query modules for specific features (e.g., `waitlist.ts`)
+  </Accordion>
+
+  <Accordion title="Static data (data/)">
+    JSON-like data files for jobs, categories, and filters used throughout the app.
+  </Accordion>
+
+  <Accordion title="Type definitions (types/)">
+    TypeScript interfaces and types organized by feature, ensuring type safety across the codebase.
+  </Accordion>
+
+  <Accordion title="Utilities (utils.ts)">
+    Helper functions for common operations like currency formatting (CLP), date handling, and badge color generation.
+  </Accordion>
+</AccordionGroup>
+
+## Configuration files
+
+```
+.
+├── .cursor/rules/               # Cursor AI rules for code style
+├── .env.local                   # Environment variables
+├── biome.json                   # Biome linter/formatter config
+├── next.config.ts               # Next.js configuration
+├── tailwind.config.ts           # TailwindCSS 4 configuration
+├── tsconfig.json                # TypeScript configuration
+└── package.json                 # Dependencies and scripts
+```
+
+## Best practices
+
+- **Feature-based organization**: Group related files by feature rather than file type
+- **Shared utilities in lib/**: Keep configuration and utilities centralized in `lib/`
+- **Type safety**: Define TypeScript types in `lib/types/` for all data structures
+- **Component hierarchy**: Follow the pattern `common/` → `ui/` → `landing/` → `dashboard/`
+- **Migrations**: Store all database schema changes in `lib/db/migrations/`

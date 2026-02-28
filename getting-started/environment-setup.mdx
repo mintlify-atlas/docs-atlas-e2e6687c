@@ -1,0 +1,117 @@
+---
+title: Environment setup
+description: Configure environment variables for local development
+---
+
+Biovity uses environment variables to configure database connections, authentication, and other settings. Follow these steps to set up your local environment.
+
+## Create environment file
+
+<Steps>
+  <Step title="Copy the example file">
+    Biovity includes an `.env.example` file with all required variables. Copy it to create your local environment file:
+
+    ```bash
+    cp .env.example .env.local
+    ```
+
+    <Note>
+    Next.js automatically loads `.env.local` for local development. This file should never be committed to version control.
+    </Note>
+  </Step>
+
+  <Step title="Configure database connection">
+    Update the `DATABASE_URL` with your PostgreSQL credentials:
+
+    ```bash .env.local
+    # Database (PostgreSQL - Supabase)
+    DATABASE_URL="postgresql://user:password@host:5432/database"
+    ```
+
+    Replace:
+    - `user` - Your PostgreSQL username
+    - `password` - Your PostgreSQL password
+    - `host` - Database host (use `localhost` for local development)
+    - `5432` - PostgreSQL port (default is 5432)
+    - `database` - Your database name
+  </Step>
+
+  <Step title="Generate authentication secret">
+    Better Auth requires a secret key for signing tokens. Generate one using OpenSSL:
+
+    ```bash
+    openssl rand -base64 32
+    ```
+
+    Copy the output and add it to your `.env.local`:
+
+    ```bash .env.local
+    # Better Auth (REQUIRED)
+    BETTER_AUTH_SECRET="your-generated-secret-here"
+    BETTER_AUTH_URL="http://localhost:3000"
+    ```
+
+    <Warning>
+    Never share or commit your `BETTER_AUTH_SECRET`. Generate a new one for each environment.
+    </Warning>
+  </Step>
+
+  <Step title="Configure public URLs">
+    Set the public-facing URLs for your application:
+
+    ```bash .env.local
+    # Client-side (exposed to browser - safe to expose)
+    NEXT_PUBLIC_APP_URL="http://localhost:3000"
+    NEXT_PUBLIC_SITE_URL="https://biovity.cl"
+    ```
+
+    <Note>
+    Variables prefixed with `NEXT_PUBLIC_` are exposed to the browser. Only use this prefix for non-sensitive values.
+    </Note>
+  </Step>
+
+  <Step title="Set development mode (optional)">
+    Optionally, set the Node environment:
+
+    ```bash .env.local
+    # Optional
+    NODE_ENV=development
+    ```
+  </Step>
+</Steps>
+
+## Complete environment file
+
+Your final `.env.local` should look like this:
+
+```bash .env.local
+# Database (PostgreSQL - Supabase)
+DATABASE_URL="postgresql://user:password@host:5432/database"
+
+# Better Auth (REQUIRED)
+# Generate with: openssl rand -base64 32
+BETTER_AUTH_SECRET="your-secret-here"
+BETTER_AUTH_URL="http://localhost:3000"
+
+# Client-side (exposed to browser - safe to expose)
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+NEXT_PUBLIC_SITE_URL="https://biovity.cl"
+
+# Optional
+NODE_ENV=development
+```
+
+## Environment variables reference
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `BETTER_AUTH_SECRET` | Yes | Secret key for authentication tokens |
+| `BETTER_AUTH_URL` | Yes | Base URL for authentication callbacks |
+| `NEXT_PUBLIC_APP_URL` | Yes | Public application URL |
+| `NEXT_PUBLIC_SITE_URL` | Yes | Production site URL |
+| `NODE_ENV` | No | Node environment (development/production) |
+
+## Next steps
+
+After configuring your environment, proceed to [database setup](/getting-started/database-setup) to initialize your PostgreSQL database.

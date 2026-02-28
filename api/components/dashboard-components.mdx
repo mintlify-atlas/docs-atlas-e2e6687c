@@ -1,0 +1,610 @@
+---
+title: Dashboard components
+description: Dashboard-specific components for the employee portal, including navigation, content views, and interactive features.
+---
+
+Dashboard components provide the interface for Biovity's employee dashboard at `/dashboard/employee`. These components handle user interactions, display data, and manage the dashboard experience.
+
+## Component organization
+
+Dashboard components are located in `components/dashboard/employee/` with this structure:
+
+```
+dashboard/employee/
+├── sidebarshell.tsx          # Main sidebar wrapper
+├── sidebarNav.tsx            # Sidebar navigation component
+├── homeContent.tsx           # Dashboard home view
+├── searchContent.tsx         # Job search view
+├── savedContent.tsx          # Saved jobs view
+├── applicationsContent.tsx   # Applications view
+├── messagesContent.tsx       # Messages view
+├── metricsContent.tsx        # Analytics view
+├── home/
+│   ├── homeHeader.tsx              # Dashboard header with notifications
+│   ├── metricCard.tsx              # Metric display card
+│   ├── recommendedJobCard.tsx      # Job recommendation card
+│   ├── recentApplicationsCard.tsx  # Recent applications widget
+│   ├── recentMessagesCard.tsx      # Recent messages widget
+│   └── jobAlertsCard.tsx           # Job alerts configuration
+└── calendar/
+    ├── calendar.tsx                # Main calendar component
+    ├── calendar-section.tsx        # Calendar wrapper section
+    ├── day-modal.tsx               # Day detail modal
+    ├── event-tooltip.tsx           # Event hover tooltip
+    └── upcoming-events.tsx         # Upcoming events list
+```
+
+## Core components
+
+### Sidebar navigation
+
+The main navigation sidebar with collapsible functionality.
+
+```tsx dashboard/employee/sidebarNav.tsx
+import { SidebarComponent } from "@/components/dashboard/employee/sidebarNav"
+
+export default function DashboardLayout() {
+  return (
+    <SidebarProvider>
+      <SidebarComponent />
+      {/* Main content */}
+    </SidebarProvider>
+  )
+}
+```
+
+#### Features
+
+- Collapsible icon-only mode
+- Active route highlighting
+- User profile dropdown with avatar
+- Profile progress indicator
+- Navigation tooltips
+- Logout functionality integrated with Better Auth
+
+#### Data structure
+
+```tsx
+interface NavItem {
+  title: string
+  url: string
+  icon: IconSvgElement
+  badge?: string
+}
+
+interface NavData {
+  navMain: NavItem[]
+  explore: NavItem[]
+  profileProgress: {
+    title: string
+    subtitle: string
+    percentage: number
+    actionText: string
+  }
+  user: {
+    name: string
+    title: string
+  }
+}
+```
+
+Navigation data is loaded from `lib/data/nav-data.ts`.
+
+#### Sidebar state
+
+The sidebar uses the `useSidebar()` hook from `components/animate-ui`:
+
+```tsx
+const { state, setOpen, open } = useSidebar()
+
+// state: "expanded" | "collapsed"
+// open: boolean
+// setOpen: (open: boolean) => void
+```
+
+#### Profile dropdown
+
+The user profile dropdown includes:
+
+```tsx
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <SidebarMenuButton size="lg">
+      <Avatar>{/* User avatar */}</Avatar>
+      <span>{data?.user.name}</span>
+    </SidebarMenuButton>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent>
+    <DropdownMenuItem onClick={handleViewProfile}>
+      Ver Perfil
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={handleLogout}>
+      Cerrar Sesión
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
+```
+
+### Sidebar shell
+
+Wrapper component providing the sidebar layout structure.
+
+```tsx dashboard/employee/sidebarshell.tsx
+import { SidebarShell } from "@/components/dashboard/employee/sidebarshell"
+
+export default function DashboardLayout({ children }) {
+  return (
+    <SidebarShell>
+      {children}
+    </SidebarShell>
+  )
+}
+```
+
+## Content components
+
+### Home content
+
+The main dashboard home view with metrics and recommendations.
+
+```tsx dashboard/employee/homeContent.tsx
+import { HomeContent } from "@/components/dashboard/employee/homeContent"
+
+export default function DashboardHome() {
+  return <HomeContent />
+}
+```
+
+#### Features
+
+- Personalized greeting with user's first name
+- Notification bell with unread count
+- Metric cards grid (applications, views, interviews)
+- Recent applications widget
+- Recent messages widget
+- Recommended jobs section with cards
+- Job alerts configuration
+
+#### Data flow
+
+```tsx
+const { data, isPending } = authClient.useSession()
+const firstName = data?.user?.name?.split(" ")[0] || "Usuario"
+
+// Load metrics from test data
+import { DATA } from "@/lib/data/data-test"
+
+DATA.metrics.map((metric) => (
+  <MetricCard key={metric.title} metric={metric} />
+))
+```
+
+#### Event handlers
+
+Common event handlers follow the `handle` prefix pattern:
+
+```tsx
+const handleJobClick = useCallback((jobTitle: string, company: string) => {
+  const slug = toSlug(jobTitle)
+  router.push(`/dashboard/employee/job/${slug}`)
+}, [router])
+
+const handleApplyJob = useCallback((jobId: number, jobTitle: string, company: string) => {
+  // Application logic
+}, [])
+
+const handleSaveJob = useCallback((jobId: number, jobTitle: string, company: string) => {
+  // Save job logic
+}, [])
+
+const handleNotificationClick = useCallback((id: number) => {
+  setNotifications((prev) => 
+    prev.map((n) => n.id === id ? { ...n, isRead: true } : n)
+  )
+}, [])
+```
+
+### Search content
+
+Job search interface with filters and results.
+
+```tsx dashboard/employee/searchContent.tsx
+import { SearchContent } from "@/components/dashboard/employee/searchContent"
+
+export default function SearchPage() {
+  return <SearchContent />
+}
+```
+
+### Saved content
+
+Saved jobs management view.
+
+```tsx dashboard/employee/savedContent.tsx
+import { SavedContent } from "@/components/dashboard/employee/savedContent"
+
+export default function SavedPage() {
+  return <SavedContent />
+}
+```
+
+### Applications content
+
+Job applications tracking and management.
+
+```tsx dashboard/employee/applicationsContent.tsx
+import { ApplicationsContent } from "@/components/dashboard/employee/applicationsContent"
+
+export default function ApplicationsPage() {
+  return <ApplicationsContent />
+}
+```
+
+### Messages content
+
+Messaging interface for employer communications.
+
+```tsx dashboard/employee/messagesContent.tsx
+import { MessagesContent } from "@/components/dashboard/employee/messagesContent"
+
+export default function MessagesPage() {
+  return <MessagesContent />
+}
+```
+
+### Metrics content
+
+User analytics and insights dashboard.
+
+```tsx dashboard/employee/metricsContent.tsx
+import { MetricsContent } from "@/components/dashboard/employee/metricsContent"
+
+export default function MetricsPage() {
+  return <MetricsContent />
+}
+```
+
+## Home sub-components
+
+### Home header
+
+Dashboard header with greeting and notifications.
+
+```tsx dashboard/employee/home/homeHeader.tsx
+import { HomeHeader } from "@/components/dashboard/employee/home/homeHeader"
+
+interface Notification {
+  id: number
+  title: string
+  message: string
+  time: string
+  isRead: boolean
+  type: "application" | "interview" | "recommendation"
+}
+
+<HomeHeader
+  firstName="Juan"
+  isPending={false}
+  notifications={notifications}
+  unreadCount={2}
+  onNotificationClick={handleNotificationClick}
+/>
+```
+
+### Metric card
+
+Displays individual metrics with trend indicators.
+
+```tsx dashboard/employee/home/metricCard.tsx
+import { MetricCard } from "@/components/dashboard/employee/home/metricCard"
+
+interface Metric {
+  title: string
+  value: string | number
+  icon: IconSvgElement
+  trend?: string
+  trendPositive?: boolean
+  subtitle?: string
+}
+
+<MetricCard metric={{
+  title: "Applications",
+  value: 12,
+  icon: Briefcase01Icon,
+  trend: "+2 this week",
+  trendPositive: true,
+}} />
+```
+
+#### Features
+
+- Icon display with consistent sizing
+- Large value display
+- Optional trend indicator with color coding
+- Optional subtitle for additional context
+- Memoized for performance
+
+### Recommended job card
+
+Job recommendation card with quick actions.
+
+```tsx dashboard/employee/home/recommendedJobCard.tsx
+import { RecommendedJobCard } from "@/components/dashboard/employee/home/recommendedJobCard"
+
+interface Job {
+  jobTitle: string
+  company: string
+  location: string
+  salary: string
+  type: string
+  postedDate: string
+}
+
+<RecommendedJobCard
+  job={job}
+  onJobClick={handleJobClick}
+  onApplyJob={handleApplyJob}
+  onSaveJob={handleSaveJob}
+/>
+```
+
+### Recent applications card
+
+Widget showing recent job applications.
+
+```tsx dashboard/employee/home/recentApplicationsCard.tsx
+import { RecentApplicationsCard } from "@/components/dashboard/employee/home/recentApplicationsCard"
+
+interface Application {
+  jobTitle: string
+  company: string
+  status: string
+  appliedDate: string
+}
+
+<RecentApplicationsCard
+  applications={applications}
+  onJobClick={handleJobClick}
+/>
+```
+
+### Recent messages card
+
+Widget displaying recent messages from employers.
+
+```tsx dashboard/employee/home/recentMessagesCard.tsx
+import { RecentMessagesCard } from "@/components/dashboard/employee/home/recentMessagesCard"
+
+interface Message {
+  id: number
+  from: string
+  subject: string
+  preview: string
+  time: string
+  isRead: boolean
+}
+
+<RecentMessagesCard messages={messages} />
+```
+
+### Job alerts card
+
+Configuration widget for job alerts.
+
+```tsx dashboard/employee/home/jobAlertsCard.tsx
+import { JobAlertsCard } from "@/components/dashboard/employee/home/jobAlertsCard"
+
+<JobAlertsCard onCreateAlert={handleCreateAlert} />
+```
+
+## Calendar components
+
+### Calendar
+
+Main calendar component for interview scheduling.
+
+```tsx dashboard/employee/calendar/calendar.tsx
+import { Calendar } from "@/components/dashboard/employee/calendar/calendar"
+
+export default function CalendarPage() {
+  return <Calendar />
+}
+```
+
+### Calendar section
+
+Wrapper component for calendar integration.
+
+```tsx dashboard/employee/calendar/calendar-section.tsx
+import { CalendarSection } from "@/components/dashboard/employee/calendar/calendar-section"
+
+export default function CalendarPage() {
+  return <CalendarSection />
+}
+```
+
+### Day modal
+
+Modal displaying day details and events.
+
+```tsx dashboard/employee/calendar/day-modal.tsx
+import { DayModal } from "@/components/dashboard/employee/calendar/day-modal"
+
+<DayModal
+  date={selectedDate}
+  events={dayEvents}
+  isOpen={isOpen}
+  onClose={handleClose}
+/>
+```
+
+### Event tooltip
+
+Tooltip showing event details on hover.
+
+```tsx dashboard/employee/calendar/event-tooltip.tsx
+import { EventTooltip } from "@/components/dashboard/employee/calendar/event-tooltip"
+
+<EventTooltip event={{
+  title: "Interview with TechCorp",
+  time: "10:00 AM",
+  type: "interview",
+}} />
+```
+
+### Upcoming events
+
+List of upcoming calendar events.
+
+```tsx dashboard/employee/calendar/upcoming-events.tsx
+import { UpcomingEvents } from "@/components/dashboard/employee/calendar/upcoming-events"
+
+<UpcomingEvents events={upcomingEvents} />
+```
+
+## Component patterns
+
+### Authentication integration
+
+All dashboard components integrate with Better Auth:
+
+```tsx
+import { authClient } from "@/lib/auth-client"
+
+const { useSession } = authClient
+const { data, isPending } = useSession()
+
+// Access user data
+const userName = data?.user?.name
+const userEmail = data?.user?.email
+const userType = data?.user?.type // "employee" | "organization"
+```
+
+### Router navigation
+
+Use Next.js router for navigation:
+
+```tsx
+import { useRouter } from "next/navigation"
+
+const router = useRouter()
+
+const handleNavigate = useCallback(() => {
+  router.push("/dashboard/employee/profile")
+}, [router])
+```
+
+### State management
+
+Use React hooks for local state:
+
+```tsx
+const [notifications, setNotifications] = useState<Notification[]>([])
+const [selectedJob, setSelectedJob] = useState<Job | null>(null)
+
+const handleSelect = useCallback((job: Job) => {
+  setSelectedJob(job)
+}, [])
+```
+
+### Slug generation
+
+Convert titles to URL-friendly slugs:
+
+```tsx
+const toSlug = useCallback((value: string): string => {
+  return value
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "")
+}, [])
+
+const slug = toSlug("Senior Developer") // "senior-developer"
+```
+
+### Memoization
+
+Optimize performance with memo:
+
+```tsx
+import { memo } from "react"
+
+export const MetricCard = memo(function MetricCard({ metric }: MetricCardProps) {
+  return (
+    <Card>
+      {/* Card content */}
+    </Card>
+  )
+})
+```
+
+## Data types
+
+Common TypeScript interfaces from `lib/types/dashboard.ts`:
+
+```tsx
+interface Metric {
+  title: string
+  value: string | number
+  icon: IconSvgElement
+  trend?: string
+  trendPositive?: boolean
+  subtitle?: string
+}
+
+interface Notification {
+  id: number
+  title: string
+  message: string
+  time: string
+  isRead: boolean
+  type: "application" | "interview" | "recommendation"
+}
+
+interface Job {
+  jobTitle: string
+  company: string
+  location: string
+  salary: string
+  type: string
+  postedDate: string
+}
+
+interface Application {
+  jobTitle: string
+  company: string
+  status: string
+  appliedDate: string
+}
+
+interface Message {
+  id: number
+  from: string
+  subject: string
+  preview: string
+  time: string
+  isRead: boolean
+}
+```
+
+## Styling patterns
+
+Dashboard components follow these conventions:
+
+- **Grid layouts**: Responsive grids with `grid-cols-1 md:grid-cols-2 lg:grid-cols-3`
+- **Card spacing**: Consistent `gap-4` between cards
+- **Content padding**: `p-4` for main content areas
+- **Header spacing**: `mt-4` for section headers
+- **Text hierarchy**: `text-xl` for section titles, `text-sm` for metadata
+- **Interactive states**: Hover effects with `hover:bg-accent` transitions
+
+## Accessibility
+
+Dashboard components include:
+
+- Proper ARIA labels for interactive elements
+- Keyboard navigation support
+- Focus indicators on all interactive elements
+- Screen reader friendly notifications
+- Semantic HTML structure
+- Loading states with `isPending` checks

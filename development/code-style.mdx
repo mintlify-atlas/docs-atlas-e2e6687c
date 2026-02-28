@@ -1,0 +1,324 @@
+---
+title: Code style
+description: Biome configuration, TypeScript conventions, and commit guidelines for Biovity development
+---
+
+## Biome configuration
+
+Biovity uses [Biome](https://biomejs.dev/) for fast, consistent linting and formatting across the codebase.
+
+### Configuration overview
+
+Biome is configured in `biome.json` with the following settings:
+
+```json
+{
+  "formatter": {
+    "lineWidth": 100,
+    "indentStyle": "space",
+    "lineEnding": "lf"
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "asNeeded",
+      "trailingCommas": "es5",
+      "arrowParentheses": "always"
+    }
+  },
+  "linter": {
+    "rules": {
+      "recommended": true,
+      "a11y": { "recommended": true },
+      "correctness": {
+        "useHookAtTopLevel": "error",
+        "useExhaustiveDependencies": "warn"
+      }
+    }
+  }
+}
+```
+
+### Available commands
+
+```bash
+bun lint            # Run Biome linter
+bun format          # Format code with Biome
+bun check           # Lint and auto-fix issues
+```
+
+### Key formatting rules
+
+- **Line width**: 100 characters maximum
+- **Quotes**: Double quotes for strings and JSX
+- **Semicolons**: Only when needed (ASI-compatible)
+- **Trailing commas**: ES5 style (arrays, objects)
+- **Arrow functions**: Always use parentheses around parameters
+
+## TypeScript conventions
+
+Biovity enforces strict TypeScript patterns for type safety and maintainability.
+
+### Strict mode
+
+All TypeScript files must:
+- Define explicit types for function parameters and return values
+- Avoid `any` types (configured as error in Biome)
+- Use type inference where appropriate for variables
+
+<CodeGroup>
+```typescript Good
+const formatSalary = (amount: number, currency: string): string => {
+  return `${currency} ${amount.toLocaleString()}`
+}
+
+interface JobCardProps {
+  title: string
+  company: string
+  location: string
+  onApply: () => void
+}
+```
+
+```typescript Bad
+// Missing return type
+const formatSalary = (amount: number, currency: string) => {
+  return `${currency} ${amount.toLocaleString()}`
+}
+
+// Using 'any'
+const handleData = (data: any) => {
+  console.log(data)
+}
+```
+</CodeGroup>
+
+### Type organization
+
+Types are organized in `lib/types/` by feature:
+
+```typescript
+// lib/types/trabajos.ts
+export type ModalidadTrabajo = "remoto" | "hibrido" | "presencial"
+export type FormatoTrabajo = "full-time" | "part-time" | "contrato"
+
+export interface Trabajo {
+  id: string
+  titulo: string
+  empresa: string
+  modalidad: ModalidadTrabajo
+  formato: FormatoTrabajo
+  fechaPublicacion: Date
+}
+```
+
+## Naming conventions
+
+### Functions and constants
+
+Prefer `const` arrow functions over function declarations:
+
+<CodeGroup>
+```typescript Preferred
+const handleSubmit = (event: React.FormEvent) => {
+  event.preventDefault()
+  // handle form submission
+}
+
+const toggle = () => {
+  setIsOpen(!isOpen)
+}
+```
+
+```typescript Avoid
+function handleSubmit(event: React.FormEvent) {
+  event.preventDefault()
+}
+
+function toggle() {
+  setIsOpen(!isOpen)
+}
+```
+</CodeGroup>
+
+### Event handlers
+
+Always prefix event handler functions with `handle`:
+
+```typescript
+const handleClick = () => { /* ... */ }
+const handleSubmit = () => { /* ... */ }
+const handleKeyDown = (e: React.KeyboardEvent) => { /* ... */ }
+const handleChange = (value: string) => { /* ... */ }
+```
+
+### Descriptive names
+
+Use clear, descriptive names for variables and functions:
+
+<CodeGroup>
+```typescript Good
+const filteredJobs = jobs.filter((job) => job.modalidad === "remoto")
+const isUserAuthenticated = session?.user !== null
+const fetchUserApplications = async (userId: string) => { /* ... */ }
+```
+
+```typescript Bad
+const data = jobs.filter((j) => j.modalidad === "remoto")
+const flag = session?.user !== null
+const get = async (id: string) => { /* ... */ }
+```
+</CodeGroup>
+
+## Code patterns
+
+### Early returns
+
+Use early returns for better readability:
+
+<CodeGroup>
+```typescript Good
+const JobCard = ({ job }: JobCardProps) => {
+  if (!job) return null
+  if (job.archived) return <ArchivedJobCard job={job} />
+
+  return (
+    <div className="job-card">
+      <h3>{job.titulo}</h3>
+      <p>{job.empresa}</p>
+    </div>
+  )
+}
+```
+
+```typescript Bad
+const JobCard = ({ job }: JobCardProps) => {
+  if (job) {
+    if (!job.archived) {
+      return (
+        <div className="job-card">
+          <h3>{job.titulo}</h3>
+          <p>{job.empresa}</p>
+        </div>
+      )
+    } else {
+      return <ArchivedJobCard job={job} />
+    }
+  }
+  return null
+}
+```
+</CodeGroup>
+
+### Accessibility
+
+Always include accessibility attributes:
+
+```typescript
+<button
+  onClick={handleClick}
+  onKeyDown={handleKeyDown}
+  aria-label="Apply to job"
+  tabIndex={0}
+>
+  Apply Now
+</button>
+```
+
+## Commit conventions
+
+Biovity follows [Conventional Commits](https://www.conventionalcommits.org/) format:
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer]
+```
+
+### Commit types
+
+- `feat`: New feature
+- `fix`: Bug fix
+- `hotfix`: Critical production fix
+- `design`: UI/UX changes
+- `refactor`: Code refactoring
+- `docs`: Documentation changes
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks
+- `perf`: Performance improvements
+- `style`: Code formatting
+- `ci`: CI/CD changes
+
+### Examples
+
+<CodeGroup>
+```bash Good commits
+feat(dashboard): implement metrics chart
+fix(auth): resolve session expiry issue
+design(landing): improve hero responsive layout
+refactor(components): extract animation logic to hook
+```
+
+```bash Bad commits
+update code
+fix bug
+WIP
+changes
+```
+</CodeGroup>
+
+### Commit guidelines
+
+1. Use imperative mood ("add" not "added" or "adding")
+2. Keep first line under 72 characters
+3. Be specific in the description
+4. Reference issues with `Closes #123` or `Fixes #456`
+5. Mark breaking changes with `BREAKING CHANGE:` in footer
+
+```bash
+feat(search): add salary range filter
+
+Implements advanced filter that allows users to search
+jobs by minimum and maximum salary range.
+
+Closes #123
+```
+
+## Branch conventions
+
+Branch names follow this pattern:
+
+```
+<type>/<short-description>
+```
+
+### Branch types
+
+- `feat/` - New features
+- `fix/` - Bug fixes
+- `hotfix/` - Critical production fixes
+- `design/` - Design/UI changes
+- `refactor/` - Code refactoring
+- `docs/` - Documentation
+- `test/` - Test changes
+- `chore/` - Maintenance tasks
+
+### Examples
+
+<CodeGroup>
+```bash Good branch names
+feat/user-dashboard-metrics
+fix/header-scroll-behavior
+design/landing-hero-animation
+refactor/auth-middleware-cleanup
+```
+
+```bash Bad branch names
+feature
+fix-bug
+new-feature
+mi-cambio
+```
+</CodeGroup>

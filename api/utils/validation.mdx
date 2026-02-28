@@ -1,0 +1,598 @@
+---
+title: Validation
+description: Zod validation schemas for forms, authentication, profiles, jobs, and contact forms
+---
+
+Comprehensive validation schemas built with Zod for all user input in Biovity. Includes schemas for authentication, user profiles, job search/posting, contact forms, and waitlist.
+
+## Authentication schemas
+
+### userLoginSchema
+
+Validates user login form data.
+
+<ResponseField name="email" type="string" required>
+  User email address (validated, trimmed, lowercased)
+</ResponseField>
+
+<ResponseField name="password" type="string" required>
+  User password (minimum 1 character)
+</ResponseField>
+
+<ResponseField name="rememberMe" type="boolean" default="true">
+  Remember user session
+</ResponseField>
+
+```typescript
+import { userLoginSchema } from '@/lib/validations'
+
+const data = {
+  email: 'user@example.com',
+  password: 'password123',
+  rememberMe: true
+}
+
+const result = userLoginSchema.safeParse(data)
+if (result.success) {
+  // Valid data
+  console.log(result.data)
+}
+```
+
+### organizationLoginSchema
+
+Validates organization login form data.
+
+<ResponseField name="organizationDomain" type="string" required>
+  Organization domain (e.g. "empresa.com")
+</ResponseField>
+
+<ResponseField name="email" type="string" required>
+  Corporate email address
+</ResponseField>
+
+<ResponseField name="password" type="string" required>
+  Organization password
+</ResponseField>
+
+<ResponseField name="rememberMe" type="boolean" default="true">
+  Remember session
+</ResponseField>
+
+### userRegistrationSchema
+
+Validates user registration form with password confirmation.
+
+<ResponseField name="name" type="string" required>
+  User full name (2-100 characters)
+</ResponseField>
+
+<ResponseField name="email" type="string" required>
+  Email address (validated, trimmed, lowercased)
+</ResponseField>
+
+<ResponseField name="password" type="string" required>
+  Password (minimum 6 characters)
+</ResponseField>
+
+<ResponseField name="confirmPassword" type="string" required>
+  Password confirmation (must match password)
+</ResponseField>
+
+<ResponseField name="profession" type="string" required>
+  User profession (1-100 characters)
+</ResponseField>
+
+<ResponseField name="acceptTerms" type="boolean" required>
+  Terms and conditions acceptance (must be true)
+</ResponseField>
+
+```typescript
+import { userRegistrationSchema, validateForm } from '@/lib/validations'
+
+const formData = {
+  name: 'Juan Pérez',
+  email: 'juan@example.com',
+  password: 'secure123',
+  confirmPassword: 'secure123',
+  profession: 'Bioquímico',
+  acceptTerms: true
+}
+
+const result = validateForm(userRegistrationSchema, formData)
+if (!result.success) {
+  console.error(result.errors)
+  // { confirmPassword: "Las contraseñas no coinciden" }
+}
+```
+
+### organizationRegistrationSchema
+
+Validates organization registration form.
+
+<ResponseField name="contactName" type="string" required>
+  Contact person name (2-100 characters)
+</ResponseField>
+
+<ResponseField name="contactEmail" type="string" required>
+  Corporate email address
+</ResponseField>
+
+<ResponseField name="contactPassword" type="string" required>
+  Password (minimum 8 characters for organizations)
+</ResponseField>
+
+<ResponseField name="confirmPassword" type="string" required>
+  Password confirmation
+</ResponseField>
+
+<ResponseField name="contactPosition" type="string">
+  Contact person position (1-100 characters)
+</ResponseField>
+
+<ResponseField name="organizationName" type="string" required>
+  Organization name (2-200 characters)
+</ResponseField>
+
+<ResponseField name="organizationWebsite" type="string" required>
+  Organization website URL (must start with http:// or https://)
+</ResponseField>
+
+<ResponseField name="acceptTerms" type="boolean" required>
+  Terms acceptance (must be true)
+</ResponseField>
+
+### validateForm
+
+Helper function that safely parses data and returns formatted errors.
+
+<ParamField path="schema" type="ZodSchema" required>
+  Zod schema to validate against
+</ParamField>
+
+<ParamField path="data" type="unknown" required>
+  Data to validate
+</ParamField>
+
+<ResponseField name="return" type="object">
+  Validation result:
+  - Success: `{ success: true, data: T }`
+  - Failure: `{ success: false, errors: Record<string, string> }`
+</ResponseField>
+
+```typescript
+import { validateForm, userLoginSchema } from '@/lib/validations'
+
+const result = validateForm(userLoginSchema, formData)
+
+if (result.success) {
+  // Use validated data
+  await login(result.data)
+} else {
+  // Display errors
+  Object.entries(result.errors).forEach(([field, message]) => {
+    setFieldError(field, message)
+  })
+}
+```
+
+## Profile schemas
+
+### userProfileSchema
+
+Full user profile validation.
+
+<ResponseField name="name" type="string" required>
+  User name (2-100 characters)
+</ResponseField>
+
+<ResponseField name="email" type="string" required>
+  Email address
+</ResponseField>
+
+<ResponseField name="phone" type="string">
+  Phone number (8-20 characters, international format)
+</ResponseField>
+
+<ResponseField name="location" type="string">
+  User location (2-200 characters)
+</ResponseField>
+
+<ResponseField name="profession" type="string">
+  Profession (up to 100 characters)
+</ResponseField>
+
+<ResponseField name="bio" type="string">
+  Biography (up to 2000 characters)
+</ResponseField>
+
+<ResponseField name="experience" type="string">
+  Experience description (up to 50 characters)
+</ResponseField>
+
+<ResponseField name="skills" type="string[]">
+  Array of skills (1-20 items, each 1-50 characters)
+</ResponseField>
+
+<ResponseField name="avatar" type="string">
+  Avatar URL or base64 data URI
+</ResponseField>
+
+### avatarFileSchema
+
+Validates avatar file uploads.
+
+<ResponseField name="file" type="File" required>
+  Image file (JPEG, PNG, WebP, or GIF, max 2MB)
+</ResponseField>
+
+```typescript
+import { avatarFileSchema, validateAvatarFile } from '@/lib/validations'
+
+function handleAvatarUpload(file: File) {
+  const result = validateAvatarFile(file)
+  
+  if (!result.success) {
+    alert(result.error)
+    return
+  }
+  
+  // Upload valid file
+  uploadAvatar(result.data)
+}
+```
+
+### validateProfileSave
+
+Validates profile data for save operation.
+
+<ParamField path="data" type="unknown" required>
+  Profile data to validate (requires name, email, profession)
+</ParamField>
+
+<ResponseField name="return" type="object">
+  Validation result with success boolean and formatted errors
+</ResponseField>
+
+## Job schemas
+
+### jobSearchSchema
+
+Validates job search filters.
+
+<ResponseField name="query" type="string">
+  Search query text (up to 200 characters)
+</ResponseField>
+
+<ResponseField name="location" type="string">
+  Location filter (up to 200 characters)
+</ResponseField>
+
+<ResponseField name="remoteOnly" type="boolean" default="false">
+  Show only remote jobs
+</ResponseField>
+
+<ResponseField name="jobType" type="string" default="any">
+  Job type: "any", "full-time", "part-time", "contract", "internship"
+</ResponseField>
+
+<ResponseField name="experience" type="string" default="any">
+  Experience level: "any", "junior", "mid", "senior"
+</ResponseField>
+
+<ResponseField name="minSalary" type="number">
+  Minimum salary (0 to 100,000,000)
+</ResponseField>
+
+<ResponseField name="maxSalary" type="number">
+  Maximum salary (0 to 100,000,000, must be >= minSalary)
+</ResponseField>
+
+```typescript
+import { jobSearchSchema } from '@/lib/validations'
+
+const filters = {
+  query: 'bioquímico',
+  location: 'Santiago',
+  remoteOnly: false,
+  jobType: 'full-time',
+  experience: 'mid',
+  minSalary: 2000000,
+  maxSalary: 3500000
+}
+
+const result = jobSearchSchema.safeParse(filters)
+```
+
+### jobPostingSchema
+
+Validates job posting data.
+
+<ResponseField name="title" type="string" required>
+  Job title (5-200 characters)
+</ResponseField>
+
+<ResponseField name="company" type="string" required>
+  Company name (2-200 characters)
+</ResponseField>
+
+<ResponseField name="location" type="string" required>
+  Job location (2-200 characters)
+</ResponseField>
+
+<ResponseField name="salaryMin" type="number">
+  Minimum salary (0 to 100,000,000)
+</ResponseField>
+
+<ResponseField name="salaryMax" type="number">
+  Maximum salary (0 to 100,000,000, must be >= salaryMin)
+</ResponseField>
+
+<ResponseField name="jobType" type="string" required>
+  Job type enum value
+</ResponseField>
+
+<ResponseField name="experienceLevel" type="string" required>
+  Experience level enum value
+</ResponseField>
+
+<ResponseField name="description" type="string" required>
+  Job description (50-10,000 characters)
+</ResponseField>
+
+<ResponseField name="requirements" type="string">
+  Job requirements (20-5,000 characters)
+</ResponseField>
+
+<ResponseField name="tags" type="string[]" default="[]">
+  Job tags (1-20 items, each 1-50 characters)
+</ResponseField>
+
+<ResponseField name="isRemote" type="boolean" default="false">
+  Is this a remote position
+</ResponseField>
+
+<ResponseField name="isActive" type="boolean" default="true">
+  Is this job posting active
+</ResponseField>
+
+### jobApplicationSchema
+
+Validates job application submissions.
+
+<ResponseField name="jobId" type="string" required>
+  Job UUID
+</ResponseField>
+
+<ResponseField name="coverLetter" type="string" required>
+  Cover letter (50-5,000 characters)
+</ResponseField>
+
+<ResponseField name="resumeUrl" type="string" required>
+  Resume URL (valid URL format)
+</ResponseField>
+
+<ResponseField name="answers" type="array">
+  Optional screening question answers
+  - Each item: `{ question: string, answer: string }`
+</ResponseField>
+
+### validateJobSearch
+
+Validates job search filters with salary range validation.
+
+<ParamField path="data" type="unknown" required>
+  Search filters to validate
+</ParamField>
+
+<ResponseField name="return" type="object">
+  Validation result with formatted errors
+</ResponseField>
+
+### validateJobPosting
+
+Validates job posting data with salary range validation.
+
+<ParamField path="data" type="unknown" required>
+  Job posting to validate
+</ParamField>
+
+<ResponseField name="return" type="object">
+  Validation result with formatted errors
+</ResponseField>
+
+## Contact schemas
+
+### organizationContactSchema
+
+Validates organization contact form (landing page).
+
+<ResponseField name="nombre" type="string" required>
+  First name (2-100 characters)
+</ResponseField>
+
+<ResponseField name="apellido" type="string" required>
+  Last name (2-100 characters)
+</ResponseField>
+
+<ResponseField name="email" type="string" required>
+  Corporate email address
+</ResponseField>
+
+<ResponseField name="telefono" type="string">
+  Phone number (8-20 characters)
+</ResponseField>
+
+<ResponseField name="empresa" type="string" required>
+  Company name (2-200 characters)
+</ResponseField>
+
+<ResponseField name="mensaje" type="string" required>
+  Message (10-5,000 characters)
+</ResponseField>
+
+### generalContactSchema
+
+Validates general contact form.
+
+<ResponseField name="name" type="string" required>
+  Contact name
+</ResponseField>
+
+<ResponseField name="email" type="string" required>
+  Email address
+</ResponseField>
+
+<ResponseField name="subject" type="string" required>
+  Subject line (5-200 characters)
+</ResponseField>
+
+<ResponseField name="message" type="string" required>
+  Message content (10-5,000 characters)
+</ResponseField>
+
+### supportContactSchema
+
+Validates support request form.
+
+<ResponseField name="name" type="string" required>
+  User name
+</ResponseField>
+
+<ResponseField name="email" type="string" required>
+  Email address
+</ResponseField>
+
+<ResponseField name="issueType" type="string" required>
+  Issue type: "login", "profile", "jobs", "applications", "billing", "other"
+</ResponseField>
+
+<ResponseField name="description" type="string" required>
+  Issue description (10-5,000 characters)
+</ResponseField>
+
+<ResponseField name="attachments" type="File[]">
+  File attachments (max 5 files, each max 5MB, JPEG/PNG/PDF only)
+</ResponseField>
+
+```typescript
+import { supportContactSchema } from '@/lib/validations'
+
+const supportData = {
+  name: 'Juan Pérez',
+  email: 'juan@example.com',
+  issueType: 'login',
+  description: 'No puedo iniciar sesión en mi cuenta',
+  attachments: [screenshotFile]
+}
+
+const result = supportContactSchema.safeParse(supportData)
+```
+
+## Waitlist schemas
+
+### waitlistSchema
+
+Validates waitlist signup data.
+
+<ResponseField name="email" type="string" required>
+  Email address (validated and normalized)
+</ResponseField>
+
+<ResponseField name="role" type="string" required>
+  Role: "professional" or "empresa"
+</ResponseField>
+
+```typescript
+import { waitlistSchema, validateWaitlistRequest } from '@/lib/validations'
+
+const data = {
+  email: 'user@example.com',
+  role: 'professional'
+}
+
+const result = validateWaitlistRequest(data)
+if (result.success) {
+  await addToWaitlist(result.data)
+}
+```
+
+## Primitive schemas
+
+Base validation schemas used throughout the application.
+
+### Email schemas
+
+- **emailSchema**: RFC 5322 compliant email (max 254 chars, trimmed, lowercased)
+- **corporateEmailSchema**: Same as emailSchema (for organization emails)
+
+### Password schemas
+
+- **userPasswordSchema**: User password (6-128 characters)
+- **organizationPasswordSchema**: Organization password (8-128 characters)
+
+### Text schemas
+
+- **nameSchema**: Person name (2-100 chars, letters/spaces/hyphens/apostrophes only)
+- **shortTextSchema**: Generic short text (1-100 chars)
+- **bioSchema**: Biography/description (up to 2000 chars)
+- **messageSchema**: Message content (10-5000 chars)
+
+### URL schemas
+
+- **urlSchema**: Valid URL (must start with http:// or https://)
+- **domainSchema**: Domain name only (lowercase, no protocol)
+
+### Other schemas
+
+- **phoneSchema**: International phone number (8-20 chars, optional)
+- **locationSchema**: Location string (2-200 chars, optional)
+- **skillsSchema**: Array of skill strings (1-20 items, each 1-50 chars)
+
+### Enum schemas
+
+- **userTypeSchema**: "persona" | "organización"
+- **waitlistRoleSchema**: "professional" | "empresa"
+- **jobTypeSchema**: "any" | "full-time" | "part-time" | "contract" | "internship"
+- **experienceLevelSchema**: "any" | "junior" | "mid" | "senior"
+
+```typescript
+import { 
+  emailSchema, 
+  nameSchema, 
+  phoneSchema,
+  jobTypeSchema 
+} from '@/lib/validations'
+
+// Validate individual fields
+const email = emailSchema.parse('user@example.com')
+const name = nameSchema.parse('Juan Pérez')
+const phone = phoneSchema.parse('+56912345678')
+const jobType = jobTypeSchema.parse('full-time')
+```
+
+## Type exports
+
+All schemas export TypeScript types using `z.infer`:
+
+```typescript
+import type { 
+  UserLoginInput,
+  UserRegistrationInput,
+  JobSearchInput,
+  JobPostingInput,
+  UserProfile,
+  OrganizationContactInput 
+} from '@/lib/validations'
+```
+
+## Source
+
+Defined in:
+- `lib/validations/auth.ts` - Authentication schemas
+- `lib/validations/profile.ts` - Profile schemas
+- `lib/validations/job.ts` - Job schemas
+- `lib/validations/contact.ts` - Contact schemas
+- `lib/validations/waitlist.ts` - Waitlist schemas
+- `lib/validations/primitives.ts` - Base primitive schemas
+- `lib/validations/index.ts` - Main export

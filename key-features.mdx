@@ -1,0 +1,384 @@
+---
+title: Key features
+description: Explore the 8 core features that power Biovity's platform for connecting scientific talent with opportunities in Chile.
+---
+
+# Key features
+
+Biovity provides a comprehensive set of features designed specifically for the scientific job market. Here are the 8 core capabilities that make the platform valuable for both job seekers and employers.
+
+## 1. Specialized job search
+
+Advanced search functionality tailored to scientific careers in biotechnology, biochemistry, chemistry, and health sectors.
+
+<CardGroup cols={2}>
+  <Card title="Scientific categories" icon="flask">
+    Browse jobs organized by scientific discipline, research areas, and technical specializations
+  </Card>
+  
+  <Card title="Advanced filters" icon="filter">
+    Filter by location, salary range, experience level, contract type, and scientific field
+  </Card>
+</CardGroup>
+
+### Key capabilities
+
+- **Multi-field search**: Search by job title, company, location, or keywords
+- **Category filtering**: Biotechnology, biochemistry, chemistry, chemical engineering, health, and more
+- **Salary range filters**: View jobs within specific Chilean peso (CLP) salary ranges
+- **Location-based search**: Filter by Chilean cities and regions
+- **Experience levels**: Entry-level, mid-level, senior, and principal positions
+- **Contract types**: Full-time, part-time, internships, temporary, and contract work
+
+<Tip>
+  The search interface is optimized for scientists who know exactly what they're looking for while also supporting exploratory browsing.
+</Tip>
+
+### Technical implementation
+
+Located in `app/dashboard/employee/search/` with:
+- Server-side filtering for performance
+- Real-time search results
+- Persistent search preferences
+- Mobile-responsive design with TailwindCSS
+
+---
+
+## 2. Professional dashboards
+
+Role-based dashboards provide tailored experiences for employees and organizations with separate workflows and features.
+
+### Employee dashboard
+
+Located in `app/dashboard/employee/`, the professional dashboard includes:
+
+<Accordion title="Dashboard sections">
+  <AccordionGroup>
+    <Accordion title="Overview">
+      - Application status summary
+      - Recent job matches
+      - Profile completion status
+      - Quick actions for common tasks
+    </Accordion>
+    
+    <Accordion title="Job search">
+      - Advanced search interface
+      - Saved searches
+      - Recommended opportunities
+      - Recently viewed positions
+    </Accordion>
+    
+    <Accordion title="Applications">
+      - Active application tracking
+      - Application history
+      - Status updates and notifications
+      - Interview scheduling
+    </Accordion>
+    
+    <Accordion title="Saved jobs">
+      - Bookmarked opportunities
+      - Job comparison tools
+      - Expiration tracking
+      - Quick apply from saved list
+    </Accordion>
+  </AccordionGroup>
+</Accordion>
+
+### Organization dashboard
+
+Located in `app/dashboard/admin/`, companies get:
+
+- Job posting management
+- Candidate review and filtering
+- Application tracking and status updates
+- Company profile and branding
+- Hiring metrics and analytics
+
+<Note>
+  Dashboards use nested layouts (`app/dashboard/employee/layout.tsx`) with persistent sidebar navigation and tab-based content organization.
+</Note>
+
+---
+
+## 3. Better Auth authentication system
+
+Secure, flexible authentication powered by Better Auth with custom user types and fields.
+
+### Authentication features
+
+<CardGroup cols={2}>
+  <Card title="Email/password" icon="envelope">
+    Traditional authentication with secure password hashing and validation
+  </Card>
+  
+  <Card title="User types" icon="users">
+    Separate flows for employees (job seekers) and organizations (employers)
+  </Card>
+  
+  <Card title="Session management" icon="clock">
+    7-day sessions with automatic renewal and secure logout
+  </Card>
+  
+  <Card title="Rate limiting" icon="shield">
+    10 requests/minute per IP to prevent abuse and brute force attacks
+  </Card>
+</CardGroup>
+
+### Custom user fields
+
+Better Auth is configured with custom fields in `lib/auth.ts`:
+
+```typescript
+// Custom user fields
+type: 'employee' | 'organization'
+profession: string           // Scientific field/role
+avatar: string              // Profile image URL
+isActive: boolean           // Account status
+organizationId: string      // Link to parent org (for employees)
+```
+
+### Authentication architecture
+
+- **Server config**: `lib/auth.ts` - Better Auth server instance
+- **Client config**: `lib/auth-client.ts` - Client-side auth hooks
+- **API endpoint**: `app/api/auth/[...all]/route.ts` - Handles all auth requests
+- **Protected routes**: Middleware checks authentication for dashboard access
+
+<Info>
+  The dual user type system (employee/organization) enables different registration flows, dashboards, and permissions for job seekers vs. employers.
+</Info>
+
+---
+
+## 4. Application tracking and management
+
+Comprehensive system for managing job applications throughout the hiring process.
+
+### For job seekers
+
+Located in `app/dashboard/employee/my-applications/`:
+
+- **Application history**: View all submitted applications with timestamps
+- **Status tracking**: Monitor application progress (pending, reviewed, interview, rejected, accepted)
+- **Application details**: Access original job posting and your submitted materials
+- **Notifications**: Receive updates when application status changes
+- **Withdrawal option**: Cancel applications if circumstances change
+
+### For employers
+
+Located in `app/dashboard/employee/applications/` (employer view):
+
+- **Candidate pipeline**: Organize applications by stage in the hiring process
+- **Bulk actions**: Update multiple application statuses simultaneously
+- **Candidate comparison**: Side-by-side review of applicant qualifications
+- **Communication**: Message candidates directly through the platform
+- **Filtering**: Sort and filter applications by date, status, qualifications
+
+<Tip>
+  Application data is stored in PostgreSQL with proper indexing for fast queries even with thousands of applications.
+</Tip>
+
+---
+
+## 5. Profile and career management
+
+Robust profile system allowing professionals to showcase their scientific background and career history.
+
+### Profile components
+
+Located in `app/dashboard/employee/profile/`:
+
+<Steps>
+  <Step title="Basic information">
+    - Full name and contact details
+    - Professional title and current role
+    - Location (Chilean city/region)
+    - Profile photo/avatar
+  </Step>
+  
+  <Step title="Scientific background">
+    - Education (degrees, institutions, fields of study)
+    - Research experience and publications
+    - Technical skills and laboratory techniques
+    - Certifications and professional licenses
+  </Step>
+  
+  <Step title="Career preferences">
+    - Desired roles and scientific fields
+    - Salary expectations (CLP range)
+    - Preferred locations and remote work preferences
+    - Career goals and interests
+  </Step>
+  
+  <Step title="Professional history">
+    - Work experience timeline
+    - Previous positions and responsibilities
+    - Projects and achievements
+    - References and recommendations
+  </Step>
+</Steps>
+
+### Profile visibility and privacy
+
+- **Public profile**: Visible to employers searching for candidates
+- **Private details**: Contact information shared only after connection
+- **Anonymized browsing**: Option to view jobs without revealing identity
+- **Profile completion**: Progress indicator encouraging complete profiles
+
+<Note>
+  Profile data is stored with TypeScript interfaces defined in `lib/types/` ensuring type safety across the application.
+</Note>
+
+---
+
+## 6. Messaging and communication
+
+Integrated messaging system for direct communication between job seekers and employers.
+
+### Messaging features
+
+Located in `app/dashboard/employee/messages/`:
+
+- **Direct messaging**: One-on-one conversations between candidates and recruiters
+- **Message threads**: Organized conversations by job application or company
+- **Read receipts**: Know when your messages have been viewed
+- **Attachments**: Share documents, portfolios, or additional materials
+- **Notifications**: Email and in-app alerts for new messages
+- **Message history**: Complete conversation archive for reference
+
+### Communication workflows
+
+<CardGroup cols={2}>
+  <Card title="Application follow-up" icon="comments">
+    Employers can message candidates for clarifications or additional information
+  </Card>
+  
+  <Card title="Interview coordination" icon="calendar">
+    Schedule interviews and send meeting details through messages
+  </Card>
+  
+  <Card title="Offer negotiation" icon="handshake">
+    Discuss salary, benefits, and start dates securely
+  </Card>
+  
+  <Card title="General inquiries" icon="question">
+    Candidates can ask questions about roles or company culture
+  </Card>
+</CardGroup>
+
+<Tip>
+  All messages are stored in PostgreSQL with proper indexing for quick retrieval and search functionality.
+</Tip>
+
+---
+
+## 7. Analytics and metrics
+
+Data-driven insights for both job seekers and employers to optimize their use of the platform.
+
+### Employee metrics
+
+Located in `app/dashboard/employee/metrics/`:
+
+- **Application analytics**: Number of applications, response rates, success rates
+- **Profile views**: Track how often employers view your profile
+- **Search appearances**: See how often your profile appears in employer searches
+- **Engagement metrics**: Measure effectiveness of your job search strategy
+- **Time-to-hire**: Average time from application to offer
+- **Salary insights**: Compare your expectations to market rates
+
+### Organization metrics
+
+Employers track:
+
+- **Job posting performance**: Views, applications, and applicant quality per posting
+- **Time-to-fill**: Average days to fill open positions
+- **Candidate pipeline**: Applicants at each stage of the hiring funnel
+- **Source tracking**: Where top candidates discover your jobs
+- **Hiring trends**: Historical data on hiring patterns and seasonality
+
+<Info>
+  Metrics are calculated using utility functions from `lib/utils.ts` with proper date formatting and Chilean peso (CLP) currency handling.
+</Info>
+
+### Visualization
+
+- Charts powered by React components
+- Date range selectors for custom reporting periods
+- Export capabilities for further analysis
+- Mobile-responsive dashboard layouts
+
+---
+
+## 8. Calendar and scheduling integration
+
+Integrated calendar system for managing interviews, deadlines, and career events.
+
+### Calendar features
+
+Located in `app/dashboard/employee/calendar/`:
+
+<CardGroup cols={2}>
+  <Card title="Interview scheduling" icon="calendar-check">
+    Schedule and track upcoming interviews with automatic reminders
+  </Card>
+  
+  <Card title="Application deadlines" icon="clock">
+    View deadlines for application materials, follow-ups, and decisions
+  </Card>
+  
+  <Card title="Event integration" icon="link">
+    Sync with external calendars (Google Calendar, Outlook) for unified view
+  </Card>
+  
+  <Card title="Availability sharing" icon="share">
+    Share your availability with employers for interview scheduling
+  </Card>
+</CardGroup>
+
+### Calendar workflows
+
+- **Interview invitations**: Employers send interview requests with proposed times
+- **Candidate response**: Accept, decline, or propose alternative times
+- **Automatic reminders**: Email and in-app notifications before scheduled events
+- **Time zone handling**: Proper handling of Chilean time zones
+- **Recurring events**: Support for multi-round interview processes
+
+<Tip>
+  Calendar events are stored in PostgreSQL and can be exported to standard calendar formats (iCal) for use in external applications.
+</Tip>
+
+---
+
+## Feature integration
+
+These 8 features work together to create a cohesive platform experience:
+
+1. **Search** helps discover opportunities
+2. **Dashboard** provides centralized access to all features
+3. **Authentication** secures user data and enables personalization
+4. **Application tracking** manages the hiring process
+5. **Profiles** showcase qualifications and preferences
+6. **Messaging** facilitates communication
+7. **Analytics** provide insights for optimization
+8. **Calendar** keeps everyone organized and on schedule
+
+<Note>
+  All features are built with TypeScript for type safety, TailwindCSS for responsive design, and PostgreSQL for reliable data storage.
+</Note>
+
+## Technical architecture
+
+Features are organized using Next.js App Router conventions:
+
+- **Route-based organization**: Each feature has dedicated routes in `app/`
+- **Component modularity**: Shared UI components in `components/ui/`
+- **Type safety**: TypeScript interfaces in `lib/types/` define data structures
+- **Utility functions**: Common operations in `lib/utils.ts` (dates, currency, badges)
+- **Database schema**: PostgreSQL tables with migrations in `lib/db/migrations/`
+
+---
+
+<Info>
+  Want to understand the technical implementation? Check out the [architecture](/architecture) and [tech stack](/tech-stack) documentation.
+</Info>

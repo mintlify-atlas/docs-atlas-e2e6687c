@@ -1,0 +1,388 @@
+---
+title: Components
+description: Component organization patterns and conventions for React components in Biovity
+---
+
+## Component organization
+
+Biovity organizes components by feature and purpose in the `components/` directory:
+
+```
+components/
+├── landing/              # Landing page components
+│   ├── home/            # Home page sections
+│   ├── empresas/        # Companies page
+│   ├── nosotros/        # About page
+│   ├── trabajos/        # Jobs listing page
+│   └── salarios/        # Salary info page
+├── dashboard/           # Dashboard components
+│   ├── employee/        # Employee dashboard
+│   └── admin/           # Admin dashboard
+├── ui/                  # Base UI components (shadcn/radix)
+├── common/              # Shared components (Header, Footer)
+└── layouts/             # Layout wrappers
+```
+
+## Landing components
+
+Landing page components are organized by page and feature:
+
+### Home page components
+
+Components in `components/landing/home/` handle different sections:
+
+```typescript
+// components/landing/home/Hero.tsx
+"use client"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import * as m from "motion/react-m"
+
+export const Hero = () => {
+  const handleSearch = () => {
+    // handle search logic
+  }
+
+  return (
+    <section className="relative h-dvh w-full flex items-center">
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-green-50">
+        {/* Gradient circles for visual effect */}
+      </div>
+      <div className="relative max-w-7xl mx-auto px-4">
+        <m.h1
+          initial={{ opacity: 0, y: 28 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-5xl lg:text-7xl text-gray-900"
+        >
+          Donde el talento y la ciencia se encuentran
+        </m.h1>
+      </div>
+    </section>
+  )
+}
+```
+
+### Feature-based organization
+
+Each landing page has its own directory:
+
+<CodeGroup>
+```typescript Home sections
+// components/landing/home/
+Hero.tsx              # Hero section
+Categories.tsx        # Job categories
+HowItWorks.tsx        # Process explanation
+ForStudents.tsx       # Student-focused section
+TransparencyGuarantee.tsx
+CTA.tsx               # Call to action
+```
+
+```typescript Empresas sections
+// components/landing/empresas/
+HeroEmpresas.tsx      # Hero for companies
+PropuestaValor.tsx    # Value proposition
+FeaturesATS.tsx       # ATS features
+ComoFuncionaEmpresas.tsx
+Pricing.tsx           # Pricing plans
+Testimonios.tsx       # Testimonials
+FAQ.tsx               # Frequently asked questions
+```
+</CodeGroup>
+
+## Dashboard components
+
+Dashboard components are organized by user role:
+
+### Employee dashboard
+
+Components in `components/dashboard/employee/` follow a tab-based structure:
+
+```typescript
+// components/dashboard/employee/homeContent.tsx
+import { MetricCard } from "./home/metricCard"
+import { RecommendedJobCard } from "./home/recommendedJobCard"
+import { RecentApplicationsCard } from "./home/recentApplicationsCard"
+
+export const HomeContent = () => {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <MetricCard title="Applications" value={12} />
+        <MetricCard title="Saved Jobs" value={8} />
+        <MetricCard title="Profile Views" value={45} />
+      </div>
+      <RecommendedJobCard />
+      <RecentApplicationsCard />
+    </div>
+  )
+}
+```
+
+### Nested component structure
+
+Complex dashboard sections have nested components:
+
+```
+components/dashboard/employee/
+├── homeContent.tsx
+├── home/
+│   ├── metricCard.tsx
+│   ├── recommendedJobCard.tsx
+│   ├── recentApplicationsCard.tsx
+│   ├── recentMessagesCard.tsx
+│   └── homeHeader.tsx
+├── searchContent.tsx
+├── savedContent.tsx
+└── metricsContent.tsx
+```
+
+## UI components
+
+Base UI components in `components/ui/` are built with Radix UI and shadcn:
+
+### Button component
+
+```typescript
+// components/ui/button.tsx
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "@/lib/utils"
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-all",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive: "bg-destructive text-white hover:bg-destructive/90",
+        outline: "border bg-background hover:bg-accent",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+      },
+      size: {
+        default: "h-9 px-4 py-2",
+        sm: "h-8 px-3",
+        lg: "h-10 px-6",
+        icon: "size-9",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+function Button({
+  className,
+  variant,
+  size,
+  asChild = false,
+  ...props
+}: React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }) {
+  const Comp = asChild ? Slot : "button"
+  return <Comp className={cn(buttonVariants({ variant, size, className }))} {...props} />
+}
+
+export { Button, buttonVariants }
+```
+
+### Component variants
+
+UI components use class-variance-authority for type-safe variants:
+
+<Tabs>
+  <Tab title="Button variants">
+    ```typescript
+    <Button variant="default">Primary Action</Button>
+    <Button variant="outline">Secondary Action</Button>
+    <Button variant="ghost">Tertiary Action</Button>
+    <Button variant="destructive">Delete</Button>
+    ```
+  </Tab>
+  <Tab title="Button sizes">
+    ```typescript
+    <Button size="sm">Small</Button>
+    <Button size="default">Default</Button>
+    <Button size="lg">Large</Button>
+    <Button size="icon"><Icon /></Button>
+    ```
+  </Tab>
+</Tabs>
+
+## Component patterns
+
+### Server vs client components
+
+Biovity uses Next.js 16 App Router with React Server Components:
+
+<CodeGroup>
+```typescript Server component (default)
+// No "use client" directive
+import { getJobs } from "@/lib/data/trabajos-data"
+
+const JobsPage = async () => {
+  const jobs = await getJobs()
+
+  return (
+    <div>
+      <h1>Jobs</h1>
+      <JobsList jobs={jobs} />
+    </div>
+  )
+}
+
+export default JobsPage
+```
+
+```typescript Client component
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+
+const InteractiveCard = () => {
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  const handleToggle = () => {
+    setIsExpanded(!isExpanded)
+  }
+
+  return (
+    <div>
+      <Button onClick={handleToggle}>Toggle</Button>
+      {isExpanded && <div>Content</div>}
+    </div>
+  )
+}
+
+export default InteractiveCard
+```
+</CodeGroup>
+
+### Props and TypeScript
+
+Always define prop types for components:
+
+```typescript
+interface JobCardProps {
+  job: Trabajo
+  onApply?: () => void
+  showSalary?: boolean
+}
+
+const JobCard = ({ job, onApply, showSalary = true }: JobCardProps) => {
+  const handleApply = () => {
+    onApply?.()
+  }
+
+  return (
+    <div className="rounded-lg border p-4">
+      <h3 className="text-lg font-semibold">{job.titulo}</h3>
+      <p className="text-muted-foreground">{job.empresa}</p>
+      {showSalary && job.rangoSalarial && (
+        <p className="text-sm">
+          {formatCurrency(job.rangoSalarial.min)} - {formatCurrency(job.rangoSalarial.max)}
+        </p>
+      )}
+      {onApply && (
+        <Button onClick={handleApply} className="mt-4">
+          Apply
+        </Button>
+      )}
+    </div>
+  )
+}
+```
+
+### Composition over inheritance
+
+Use component composition for flexibility:
+
+```typescript
+const Card = ({ children }: { children: React.ReactNode }) => (
+  <div className="rounded-lg border bg-card">{children}</div>
+)
+
+const CardHeader = ({ children }: { children: React.ReactNode }) => (
+  <div className="p-6">{children}</div>
+)
+
+const CardContent = ({ children }: { children: React.ReactNode }) => (
+  <div className="p-6 pt-0">{children}</div>
+)
+
+// Usage
+<Card>
+  <CardHeader>
+    <h3>Title</h3>
+  </CardHeader>
+  <CardContent>
+    <p>Content</p>
+  </CardContent>
+</Card>
+```
+
+## Common components
+
+Shared components in `components/common/` are used across pages:
+
+### Header component
+
+```typescript
+// components/common/Header.tsx
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Logo } from "@/components/ui/logo"
+
+export const Header = () => {
+  return (
+    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
+      <div className="container flex h-16 items-center justify-between">
+        <Link href="/">
+          <Logo />
+        </Link>
+        <nav className="flex items-center gap-6">
+          <Link href="/trabajos">Trabajos</Link>
+          <Link href="/empresas">Empresas</Link>
+          <Link href="/salarios">Salarios</Link>
+          <Button asChild>
+            <Link href="/login">Iniciar Sesión</Link>
+          </Button>
+        </nav>
+      </div>
+    </header>
+  )
+}
+```
+
+### LogoutButton component
+
+```typescript
+// components/common/LogoutButton.tsx
+"use client"
+
+import { authClient } from "@/lib/auth-client"
+import { Button } from "@/components/ui/button"
+
+export const LogoutButton = () => {
+  const handleLogout = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          window.location.href = "/login"
+        },
+      },
+    })
+  }
+
+  return (
+    <Button variant="ghost" onClick={handleLogout}>
+      Cerrar Sesión
+    </Button>
+  )
+}
+```

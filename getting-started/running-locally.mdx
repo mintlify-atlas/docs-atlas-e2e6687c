@@ -1,0 +1,228 @@
+---
+title: Running locally
+description: Start the development server and access the Biovity application
+---
+
+After completing installation, environment setup, and database configuration, you're ready to run Biovity locally.
+
+## Start the development server
+
+<Steps>
+  <Step title="Run the dev command">
+    Start the Next.js development server with Turbopack:
+
+    <CodeGroup>
+      ```bash bun
+      bun dev
+      ```
+
+      ```bash npm
+      npm run dev
+      ```
+    </CodeGroup>
+
+    <Note>
+    Biovity uses Turbopack for fast refresh and optimized builds. The `--turbopack` flag is configured in `package.json`.
+    </Note>
+  </Step>
+
+  <Step title="Wait for compilation">
+    Wait for the initial compilation to complete. You should see output similar to:
+
+    ```bash
+    ▲ Next.js 16.1.1 (turbopack)
+    - Local:        http://localhost:3000
+    - Network:      http://192.168.1.x:3000
+
+    ✓ Ready in 2.3s
+    ```
+  </Step>
+
+  <Step title="Open in browser">
+    Open your browser and navigate to:
+
+    ```
+    http://localhost:3000
+    ```
+
+    You should see the Biovity landing page.
+  </Step>
+</Steps>
+
+## Available routes
+
+Once running, you can access these routes:
+
+### Public pages
+
+- `/` - Home page (landing)
+- `/empresas` - Companies page
+- `/nosotros` - About us
+- `/trabajos` - Public job board
+- `/salarios` - Salary information
+
+### Authentication
+
+- `/login` - User and organization login
+- `/register` - User and organization registration
+
+### Dashboard (requires authentication)
+
+- `/dashboard/employee` - Employee dashboard home
+- `/dashboard/employee/search` - Job search
+- `/dashboard/employee/applications` - Job applications
+- `/dashboard/employee/my-applications` - User's applications
+- `/dashboard/employee/saved` - Saved jobs
+- `/dashboard/employee/messages` - Messaging
+- `/dashboard/employee/calendar` - Calendar integration
+- `/dashboard/employee/profile` - User profile
+- `/dashboard/employee/metrics` - User analytics
+- `/dashboard/admin` - Admin dashboard
+
+## Development tools
+
+While developing, you can use these commands:
+
+### Code quality
+
+<CodeGroup>
+  ```bash bun
+  # Run linter
+  bun lint
+
+  # Format code
+  bun format
+
+  # Auto-fix issues
+  bun check
+
+  # Type check
+  bun typecheck
+  ```
+
+  ```bash npm
+  # Run linter
+  npm run lint
+
+  # Format code
+  npm run format
+
+  # Auto-fix issues
+  npm run check
+
+  # Type check
+  npm run typecheck
+  ```
+</CodeGroup>
+
+### Build for production
+
+<CodeGroup>
+  ```bash bun
+  # Build production bundle
+  bun build
+
+  # Start production server
+  bun start
+  ```
+
+  ```bash npm
+  # Build production bundle
+  npm run build
+
+  # Start production server
+  npm start
+  ```
+</CodeGroup>
+
+## Code style enforcement
+
+Biovity uses **Biome** for linting and formatting with strict rules:
+
+- Line width: 100 characters
+- Semicolons: as needed
+- Recommended rules enabled
+- No unused variables (warning)
+- No explicit `any` (error)
+
+<Note>
+Run `bun check` before committing to ensure your code passes all quality checks.
+</Note>
+
+## Hot reload
+
+Turbopack provides fast refresh during development:
+
+- **Save a file** - Changes appear instantly in the browser
+- **Add a component** - Auto-detected and compiled
+- **Fix errors** - Error overlay shows detailed information
+
+## Accessing the API
+
+Better Auth API routes are available at:
+
+```
+http://localhost:3000/api/auth/*
+```
+
+The authentication endpoint is configured in `app/api/auth/[...all]/route.ts`.
+
+## Troubleshooting
+
+### Port already in use
+
+If port 3000 is already in use, specify a different port:
+
+<CodeGroup>
+  ```bash bun
+  bun dev --port 3001
+  ```
+
+  ```bash npm
+  npm run dev -- --port 3001
+  ```
+</CodeGroup>
+
+### Database connection errors
+
+- Verify PostgreSQL is running
+- Check `DATABASE_URL` in `.env.local`
+- Ensure database exists and is accessible
+
+### Authentication errors
+
+- Verify `BETTER_AUTH_SECRET` is set in `.env.local`
+- Check `BETTER_AUTH_URL` matches your local URL
+- Ensure database migrations have run
+
+### Module not found errors
+
+- Clear cache and reinstall dependencies:
+  <CodeGroup>
+    ```bash bun
+    rm -rf node_modules .next
+    bun install
+    ```
+
+    ```bash npm
+    rm -rf node_modules .next
+    npm install
+    ```
+  </CodeGroup>
+
+## Development workflow
+
+1. **Start dev server** - `bun dev`
+2. **Make changes** - Edit files in `app/`, `components/`, or `lib/`
+3. **Check browser** - Changes appear automatically
+4. **Run quality checks** - `bun check` and `bun typecheck`
+5. **Commit changes** - Follow [commit conventions](/contributing/commit-guidelines)
+
+## Next steps
+
+Now that you have Biovity running locally:
+
+- Explore the [project structure](/architecture/project-structure)
+- Learn about [authentication](/features/authentication)
+- Read [development guidelines](/contributing/development-guidelines)
+- Check out [component patterns](/components/overview)

@@ -1,0 +1,140 @@
+---
+title: Environment variables
+description: Configure required and optional environment variables for Biovity deployment
+---
+
+Biovity requires specific environment variables to function properly. This guide covers all required and optional variables you need to configure.
+
+## Database configuration
+
+Biovity uses PostgreSQL as its database, typically hosted on Supabase.
+
+<ParamField path="DATABASE_URL" type="string" required>
+  PostgreSQL connection string for your database.
+  
+  **Format:** `postgresql://user:password@host:5432/database`
+  
+  **Example:**
+  ```
+  DATABASE_URL="postgresql://postgres:mypassword@db.example.supabase.co:5432/postgres"
+  ```
+</ParamField>
+
+## Authentication
+
+Biovity uses Better Auth for authentication. These variables are required for the auth system to work.
+
+<ParamField path="BETTER_AUTH_SECRET" type="string" required>
+  Secret key used to sign and verify authentication tokens. Must be a cryptographically secure random string.
+  
+  **Generate with:**
+  ```bash
+  openssl rand -base64 32
+  ```
+  
+  **Example:**
+  ```
+  BETTER_AUTH_SECRET="your-generated-secret-here"
+  ```
+</ParamField>
+
+<ParamField path="BETTER_AUTH_URL" type="string" required>
+  The base URL where your Better Auth API is accessible. This should match your application's URL.
+  
+  **Development:**
+  ```
+  BETTER_AUTH_URL="http://localhost:3000"
+  ```
+  
+  **Production:**
+  ```
+  BETTER_AUTH_URL="https://yourdomain.com"
+  ```
+</ParamField>
+
+<Warning>
+  Never commit your `BETTER_AUTH_SECRET` to version control. Generate a new secret for each environment (development, staging, production).
+</Warning>
+
+## Client-side variables
+
+These variables are prefixed with `NEXT_PUBLIC_` and are exposed to the browser. Only include non-sensitive information.
+
+<ParamField path="NEXT_PUBLIC_APP_URL" type="string" required>
+  The public URL of your application. Used for client-side redirects and API calls.
+  
+  **Development:**
+  ```
+  NEXT_PUBLIC_APP_URL="http://localhost:3000"
+  ```
+  
+  **Production:**
+  ```
+  NEXT_PUBLIC_APP_URL="https://yourdomain.com"
+  ```
+</ParamField>
+
+<ParamField path="NEXT_PUBLIC_SITE_URL" type="string" required>
+  The canonical URL of your site. Used for SEO and social sharing.
+  
+  **Example:**
+  ```
+  NEXT_PUBLIC_SITE_URL="https://biovity.cl"
+  ```
+</ParamField>
+
+## Optional variables
+
+<ParamField path="NODE_ENV" type="string" default="development">
+  The environment mode for Node.js. Automatically set by most deployment platforms.
+  
+  **Values:** `development`, `production`, `test`
+  
+  **Example:**
+  ```
+  NODE_ENV=production
+  ```
+</ParamField>
+
+## Setting up your environment
+
+<Steps>
+  <Step title="Copy the example file">
+    Create your local environment file from the example:
+    
+    ```bash
+    cp .env.example .env.local
+    ```
+  </Step>
+  
+  <Step title="Generate authentication secret">
+    Generate a secure secret for Better Auth:
+    
+    ```bash
+    openssl rand -base64 32
+    ```
+    
+    Copy the output and set it as `BETTER_AUTH_SECRET` in your `.env.local` file.
+  </Step>
+  
+  <Step title="Configure database URL">
+    Add your PostgreSQL connection string to `DATABASE_URL`. If using Supabase, you can find this in your project settings under "Database" > "Connection string".
+  </Step>
+  
+  <Step title="Set application URLs">
+    Configure `BETTER_AUTH_URL`, `NEXT_PUBLIC_APP_URL`, and `NEXT_PUBLIC_SITE_URL` to match your deployment environment.
+  </Step>
+</Steps>
+
+## Deployment platforms
+
+When deploying to platforms like Vercel, add these environment variables in your project settings:
+
+1. Navigate to your project settings
+2. Go to "Environment Variables"
+3. Add each variable with the appropriate value for your environment
+4. Select which environments (Production, Preview, Development) should use each variable
+
+<Info>
+  Most platforms automatically set `NODE_ENV` based on the deployment environment. You typically don't need to set this manually.
+</Info>

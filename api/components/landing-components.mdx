@@ -1,0 +1,581 @@
+---
+title: Landing components
+description: Feature-specific components for landing pages, organized by page sections for home, companies, about us, jobs, and salaries pages.
+---
+
+Landing components are organized by feature and page, providing specialized sections for Biovity's public-facing pages. These components use Motion (Framer Motion) for animations and follow a consistent pattern for scroll-triggered animations.
+
+## Component organization
+
+Landing components are organized into feature directories:
+
+- `landing/home/`: Homepage components
+- `landing/empresas/`: Company-facing landing page components
+- `landing/nosotros/`: About us page components
+- `landing/trabajos/`: Public job board components
+- `landing/salarios/`: Salary information page components
+
+## Animation patterns
+
+All landing components use Motion for animations with these patterns:
+
+```tsx
+import * as m from "motion/react-m"
+import { useReducedMotion } from "motion/react"
+import { getSpringTransition, getTransition, LANDING_ANIMATION } from "@/lib/animations"
+
+const reducedMotion = useReducedMotion()
+const t = (delay = 0) => getTransition({ delay, reducedMotion })
+const ts = (delay = 0) => getSpringTransition({ delay, reducedMotion })
+```
+
+### Common animation properties
+
+- **Initial state**: `initial={{ opacity: 0, y: 40 }}`
+- **Animate state**: `animate={{ opacity: 1, y: 0 }}` or `whileInView={{ opacity: 1, y: 0 }}`
+- **Viewport config**: `viewport={{ once: true, margin: LANDING_ANIMATION.viewportMargin }}`
+- **Transitions**: Use `t(delay)` for fade/slide, `ts(delay)` for spring animations
+- **Staggering**: Use `LANDING_ANIMATION.chainStagger` for sequential animations
+
+## Home page components
+
+### Hero
+
+The main hero section with search functionality and gradient background.
+
+```tsx landing/home/Hero.tsx
+import { Hero } from "@/components/landing/home/Hero"
+
+export default function HomePage() {
+  return <Hero />
+}
+```
+
+#### Features
+
+- Animated gradient background with multiple color blurs
+- Job search inputs with location filtering
+- Quick action buttons for different user types
+- Full viewport height with centered content
+- Spring animations for smooth entrance
+
+#### Structure
+
+```tsx
+<section className="relative h-dvh w-full flex items-center justify-center">
+  {/* Gradient background */}
+  <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-green-50">
+    {/* Blur circles */}
+  </div>
+  
+  {/* Content */}
+  <div className="relative max-w-7xl mx-auto px-4">
+    <m.h1>Headline</m.h1>
+    <m.p>Description</m.p>
+    <Card>{/* Search inputs */}</Card>
+  </div>
+</section>
+```
+
+### Categories
+
+Displays job categories with animated cards.
+
+```tsx landing/home/Categories.tsx
+import { Categories } from "@/components/landing/home/Categories"
+
+export default function HomePage() {
+  return <Categories />
+}
+```
+
+#### Features
+
+- Grid layout (1/2/3 columns responsive)
+- Category cards with icons and job counts
+- Staggered card animations
+- Data-driven from `CATEGORIES_HOME` in `lib/data/home-data.ts`
+- Gradient icons with custom colors per category
+
+#### Data structure
+
+```tsx
+interface Category {
+  title: string
+  positions: string
+  icon: IconSvgElement
+  color: string // Tailwind gradient classes
+}
+```
+
+### How it works
+
+Explains the platform process with visual steps.
+
+```tsx landing/home/HowItWorks.tsx
+import { HowItWorks } from "@/components/landing/home/HowItWorks"
+
+export default function HomePage() {
+  return <HowItWorks />
+}
+```
+
+### For students
+
+Section highlighting benefits for students.
+
+```tsx landing/home/ForStudents.tsx
+import { ForStudents } from "@/components/landing/home/ForStudents"
+
+export default function HomePage() {
+  return <ForStudents />
+}
+```
+
+### Transparency guarantee
+
+Section emphasizing transparency and trust.
+
+```tsx landing/home/TransparencyGuarantee.tsx
+import { TransparencyGuarantee } from "@/components/landing/home/TransparencyGuarantee"
+
+export default function HomePage() {
+  return <TransparencyGuarantee />
+}
+```
+
+### CTA
+
+Call-to-action section for user registration.
+
+```tsx landing/home/CTA.tsx
+import { CTA } from "@/components/landing/home/CTA"
+
+export default function HomePage() {
+  return <CTA />
+}
+```
+
+### Beam section
+
+Decorative section with animated beam effect.
+
+```tsx landing/home/BeamSection.tsx
+import { BeamSection } from "@/components/landing/home/BeamSection"
+
+export default function HomePage() {
+  return <BeamSection />
+}
+```
+
+#### Common subdirectory
+
+The `landing/home/common/` directory contains shared components:
+
+- `AdnBeam.tsx`: DNA-inspired animated beam component
+
+## Companies page components
+
+Components for the employer-facing landing page at `/empresas`.
+
+### Hero empresas
+
+Hero section targeting company recruiters.
+
+```tsx landing/empresas/HeroEmpresas.tsx
+import { HeroEmpresas } from "@/components/landing/empresas/HeroEmpresas"
+
+export default function EmpresasPage() {
+  return <HeroEmpresas />
+}
+```
+
+### Features ATS
+
+Showcases the applicant tracking system features.
+
+```tsx landing/empresas/FeaturesATS.tsx
+import { FeaturesATS } from "@/components/landing/empresas/FeaturesATS"
+
+export default function EmpresasPage() {
+  return <FeaturesATS />
+}
+```
+
+### Propuesta valor
+
+Value proposition section for companies.
+
+```tsx landing/empresas/PropuestaValor.tsx
+import { PropuestaValor } from "@/components/landing/empresas/PropuestaValor"
+
+export default function EmpresasPage() {
+  return <PropuestaValor />
+}
+```
+
+### Pricing
+
+Pricing plans and options.
+
+```tsx landing/empresas/Pricing.tsx
+import { Pricing } from "@/components/landing/empresas/Pricing"
+
+export default function EmpresasPage() {
+  return <Pricing />
+}
+```
+
+### Testimonials
+
+Company testimonials and reviews.
+
+```tsx landing/empresas/Testimonios.tsx
+import { Testimonios } from "@/components/landing/empresas/Testimonios"
+
+export default function EmpresasPage() {
+  return <Testimonios />
+}
+```
+
+### FAQ
+
+Frequently asked questions with animated accordion.
+
+```tsx landing/empresas/FAQ.tsx
+import { FAQ } from "@/components/landing/empresas/FAQ"
+
+export default function EmpresasPage() {
+  return <FAQ />
+}
+```
+
+#### Features
+
+- Animated accordion from `components/animate-ui`
+- Data-driven from `FAQS_EMPRESAS` in `lib/data/empresas-data.ts`
+- Custom transition timing with reduced motion support
+- Preserves content when collapsed with `keepRendered`
+
+#### Data structure
+
+```tsx
+interface FAQ {
+  question: string
+  answer: string
+}
+```
+
+### Como funciona empresas
+
+How the platform works for companies.
+
+```tsx landing/empresas/ComoFuncionaEmpresas.tsx
+import { ComoFuncionaEmpresas } from "@/components/landing/empresas/ComoFuncionaEmpresas"
+
+export default function EmpresasPage() {
+  return <ComoFuncionaEmpresas />
+}
+```
+
+### Logos empresas
+
+Showcase of partner company logos.
+
+```tsx landing/empresas/LogosEmpresas.tsx
+import { LogosEmpresas } from "@/components/landing/empresas/LogosEmpresas"
+
+export default function EmpresasPage() {
+  return <LogosEmpresas />
+}
+```
+
+### CTA contacto
+
+Call-to-action for company contact.
+
+```tsx landing/empresas/CTAContacto.tsx
+import { CTAContacto } from "@/components/landing/empresas/CTAContacto"
+
+export default function EmpresasPage() {
+  return <CTAContacto />
+}
+```
+
+## About us page components
+
+Components for the `/nosotros` about us page.
+
+### Nosotros hero
+
+```tsx landing/nosotros/NosotrosHero.tsx
+import { NosotrosHero } from "@/components/landing/nosotros/NosotrosHero"
+
+export default function NosotrosPage() {
+  return <NosotrosHero />
+}
+```
+
+### Historia mision
+
+Company history and mission statement.
+
+```tsx landing/nosotros/HistoriaMision.tsx
+import { HistoriaMision } from "@/components/landing/nosotros/HistoriaMision"
+
+export default function NosotrosPage() {
+  return <HistoriaMision />
+}
+```
+
+### Problema solucion
+
+Problem and solution explanation.
+
+```tsx landing/nosotros/ProblemaSolucion.tsx
+import { ProblemaSolucion } from "@/components/landing/nosotros/ProblemaSolucion"
+
+export default function NosotrosPage() {
+  return <ProblemaSolucion />
+}
+```
+
+### Equipo
+
+Team member showcase.
+
+```tsx landing/nosotros/Equipo.tsx
+import { Equipo } from "@/components/landing/nosotros/Equipo"
+
+export default function NosotrosPage() {
+  return <Equipo />
+}
+```
+
+### CTA nosotros
+
+```tsx landing/nosotros/CTANosotros.tsx
+import { CTANosotros } from "@/components/landing/nosotros/CTANosotros"
+
+export default function NosotrosPage() {
+  return <CTANosotros />
+}
+```
+
+## Jobs page components
+
+Components for the public job board at `/trabajos`.
+
+### Trabajos hero
+
+```tsx landing/trabajos/TrabajosHero.tsx
+import { TrabajosHero } from "@/components/landing/trabajos/TrabajosHero"
+
+export default function TrabajosPage() {
+  return <TrabajosHero />
+}
+```
+
+### Trabajos search filters
+
+Search and filter controls for job listings.
+
+```tsx landing/trabajos/TrabajosSearchFilters.tsx
+import { TrabajosSearchFilters } from "@/components/landing/trabajos/TrabajosSearchFilters"
+
+export default function TrabajosPage() {
+  return <TrabajosSearchFilters />
+}
+```
+
+### Trabajos list
+
+Job listing cards with pagination.
+
+```tsx landing/trabajos/TrabajosList.tsx
+import { TrabajosList } from "@/components/landing/trabajos/TrabajosList"
+
+export default function TrabajosPage() {
+  return <TrabajosList />
+}
+```
+
+### Trabajos page content
+
+Main content container combining all trabajos components.
+
+```tsx landing/trabajos/TrabajosPageContent.tsx
+import { TrabajosPageContent } from "@/components/landing/trabajos/TrabajosPageContent"
+
+export default function TrabajosPage() {
+  return <TrabajosPageContent />
+}
+```
+
+## Salary page components
+
+Components for the salary insights page at `/salarios`.
+
+### Salarios hero
+
+```tsx landing/salarios/SalariosHero.tsx
+import { SalariosHero } from "@/components/landing/salarios/SalariosHero"
+
+export default function SalariosPage() {
+  return <SalariosHero />
+}
+```
+
+### Salarios por carrera
+
+Salary breakdown by career field.
+
+```tsx landing/salarios/SalariosPorCarrera.tsx
+import { SalariosPorCarrera } from "@/components/landing/salarios/SalariosPorCarrera"
+
+export default function SalariosPage() {
+  return <SalariosPorCarrera />
+}
+```
+
+### Salarios por educacion
+
+Salary data by education level.
+
+```tsx landing/salarios/SalariosPorEducacion.tsx
+import { SalariosPorEducacion } from "@/components/landing/salarios/SalariosPorEducacion"
+
+export default function SalariosPage() {
+  return <SalariosPorEducacion />
+}
+```
+
+### Salarios por industria
+
+Salary insights by industry sector.
+
+```tsx landing/salarios/SalariosPorIndustria.tsx
+import { SalariosPorIndustria } from "@/components/landing/salarios/SalariosPorIndustria"
+
+export default function SalariosPage() {
+  return <SalariosPorIndustria />
+}
+```
+
+### Salarios por region
+
+Regional salary comparisons.
+
+```tsx landing/salarios/SalariosPorRegion.tsx
+import { SalariosPorRegion } from "@/components/landing/salarios/SalariosPorRegion"
+
+export default function SalariosPage() {
+  return <SalariosPorRegion />
+}
+```
+
+### Salarios conclusiones
+
+Key insights and conclusions from salary data.
+
+```tsx landing/salarios/SalariosConclusiones.tsx
+import { SalariosConclusiones } from "@/components/landing/salarios/SalariosConclusiones"
+
+export default function SalariosPage() {
+  return <SalariosConclusiones />
+}
+```
+
+## Component patterns
+
+All landing components follow these conventions:
+
+### Event handlers
+
+Use `handle` prefix for event handler functions:
+
+```tsx
+const handleViewMore = useCallback(() => {
+  router.push("/trabajos")
+}, [router])
+
+const handleCategoryClick = useCallback((categoryId: string) => {
+  // Handle category selection
+}, [])
+```
+
+### Animation helpers
+
+Define transition helpers at the component level:
+
+```tsx
+const reducedMotion = useReducedMotion()
+const t = (delay = 0) => getTransition({ delay, reducedMotion })
+const ts = (delay = 0) => getSpringTransition({ delay, reducedMotion })
+```
+
+### Section structure
+
+Follow consistent section markup:
+
+```tsx
+<section className="py-24 bg-gray-50">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <m.div
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: LANDING_ANIMATION.viewportMargin }}
+      transition={t(0)}
+      className="text-center mb-16"
+    >
+      <m.h2>Section Title</m.h2>
+      <m.p>Section Description</m.p>
+    </m.div>
+    {/* Section content */}
+  </div>
+</section>
+```
+
+### Responsive design
+
+Use responsive utility classes:
+
+```tsx
+className="text-3xl md:text-5xl"
+className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+className="px-4 sm:px-6 lg:px-8"
+```
+
+### Data integration
+
+Load data from centralized data files:
+
+```tsx
+import { CATEGORIES_HOME } from "@/lib/data/home-data"
+import { FAQS_EMPRESAS } from "@/lib/data/empresas-data"
+
+// Map over data
+{CATEGORIES_HOME.map((category, index) => (
+  <CategoryCard key={category.title} category={category} />
+))}
+```
+
+## Styling conventions
+
+- **Gradient backgrounds**: Use `bg-gradient-to-br` with color stops
+- **Blur effects**: Use `blur-2xl` or `blur-3xl` for soft backgrounds
+- **Spacing**: Consistent `py-24` for section padding
+- **Max width**: `max-w-7xl` for content containers
+- **Text colors**: `text-gray-900` for headings, `text-gray-600` for body
+- **Cards**: `bg-white/80 backdrop-blur-sm` for glassmorphism effects
+
+## Accessibility
+
+Landing components include:
+
+- Semantic HTML (`section`, `h1`, `h2`, `p`)
+- Reduced motion support via `useReducedMotion()`
+- Keyboard navigation for interactive elements
+- Proper heading hierarchy
+- Alt text for images and icons
+- ARIA labels where appropriate

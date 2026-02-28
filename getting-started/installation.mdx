@@ -1,0 +1,79 @@
+---
+title: Installation
+description: Install Biovity dependencies using your preferred package manager
+---
+
+Biovity requires Node.js 20+ or Bun to run. Follow these steps to install the project dependencies.
+
+## Prerequisites
+
+Before installing Biovity, ensure you have one of the following installed:
+
+- **Node.js 20+** with npm
+- **Bun** (recommended for faster installation)
+
+<Note>
+Biovity uses Bun for development, but you can use npm if you prefer. All examples include both options.
+</Note>
+
+## Install dependencies
+
+<Steps>
+  <Step title="Clone the repository">
+    First, clone the Biovity repository to your local machine:
+
+    ```bash
+    git clone <repository-url>
+    cd biovity
+    ```
+  </Step>
+
+  <Step title="Install packages">
+    Install all project dependencies using your preferred package manager:
+
+    <CodeGroup>
+      ```bash bun
+      bun install
+      ```
+
+      ```bash npm
+      npm install
+      ```
+    </CodeGroup>
+
+    This will install all dependencies listed in `package.json`, including:
+    - **Next.js 16** - React framework with App Router
+    - **React 19** - UI library
+    - **TailwindCSS 4** - Utility-first CSS framework
+    - **Better Auth** - Authentication system
+    - **PostgreSQL driver** (pg) - Database client
+    - **Biome** - Linter and formatter
+  </Step>
+
+  <Step title="Verify installation">
+    Verify that the installation was successful by checking the installed packages:
+
+    <CodeGroup>
+      ```bash bun
+      bun --version
+      ```
+
+      ```bash npm
+      npm list --depth=0
+      ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+## Development dependencies
+
+Biovity includes several development tools:
+
+- **Biome** - Fast linter and formatter with strict rules
+- **TypeScript** - Static type checking
+- **Tailwind CSS** - Utility-first CSS framework
+- **Turbopack** - Fast bundler for Next.js development
+
+## Next steps
+
+After installing dependencies, proceed to [environment setup](/getting-started/environment-setup) to configure your local environment variables.

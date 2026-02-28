@@ -1,0 +1,259 @@
+---
+title: Login
+description: Email/password login endpoint and client usage for Biovity authentication
+---
+
+Authenticate users with email and password credentials.
+
+## Endpoint
+
+```
+POST /api/auth/sign-in/email
+```
+
+## Request parameters
+
+<ParamField body="email" type="string" required>
+  User's email address
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  User's password
+</ParamField>
+
+<ParamField body="rememberMe" type="boolean" default="false">
+  Extend session duration if enabled
+</ParamField>
+
+## Request example
+
+```json
+{
+  "email": "user@example.com",
+  "password": "securePassword123",
+  "rememberMe": true
+}
+```
+
+## Response
+
+### Success response
+
+<ResponseField name="user" type="object">
+  Authenticated user object
+  
+  <ResponseField name="id" type="string">
+    Unique user identifier (UUID)
+  </ResponseField>
+  
+  <ResponseField name="email" type="string">
+    User's email address
+  </ResponseField>
+  
+  <ResponseField name="name" type="string">
+    User's full name
+  </ResponseField>
+  
+  <ResponseField name="type" type="string">
+    User type: `employee` or `organization`
+  </ResponseField>
+  
+  <ResponseField name="profession" type="string">
+    User's professional designation
+  </ResponseField>
+  
+  <ResponseField name="avatar" type="string">
+    Profile avatar URL
+  </ResponseField>
+  
+  <ResponseField name="isActive" type="boolean">
+    Account activation status
+  </ResponseField>
+  
+  <ResponseField name="organizationId" type="string">
+    Associated organization ID (for employees)
+  </ResponseField>
+  
+  <ResponseField name="isEmailVerified" type="boolean">
+    Email verification status
+  </ResponseField>
+  
+  <ResponseField name="createdAt" type="string">
+    Account creation timestamp (ISO 8601)
+  </ResponseField>
+  
+  <ResponseField name="updatedAt" type="string">
+    Last update timestamp (ISO 8601)
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="session" type="object">
+  Session information
+  
+  <ResponseField name="token" type="string">
+    Session token
+  </ResponseField>
+  
+  <ResponseField name="expiresAt" type="string">
+    Session expiration timestamp (ISO 8601)
+  </ResponseField>
+</ResponseField>
+
+### Success example
+
+```json
+{
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "type": "employee",
+    "profession": "Biotechnology Engineer",
+    "avatar": "https://example.com/avatar.jpg",
+    "isActive": true,
+    "organizationId": null,
+    "isEmailVerified": true,
+    "createdAt": "2026-01-15T10:30:00.000Z",
+    "updatedAt": "2026-02-28T14:22:00.000Z"
+  },
+  "session": {
+    "token": "session_abc123def456",
+    "expiresAt": "2026-03-07T14:22:00.000Z"
+  }
+}
+```
+
+### Error response
+
+<ResponseField name="error" type="string">
+  Error message describing the failure
+</ResponseField>
+
+<ResponseField name="code" type="string">
+  Error code identifier
+</ResponseField>
+
+### Error example
+
+```json
+{
+  "error": "Invalid email or password",
+  "code": "INVALID_CREDENTIALS"
+}
+```
+
+## Client usage
+
+### React hook
+
+Use the `signIn` method from the auth client:
+
+```typescript
+import { signIn } from "@/lib/auth-client"
+
+const handleLogin = async () => {
+  const { data, error } = await signIn.email({
+    email: "user@example.com",
+    password: "securePassword123",
+    rememberMe: true,
+  })
+
+  if (error) {
+    console.error("Login failed:", error)
+    return
+  }
+
+  console.log("Logged in:", data.user)
+}
+```
+
+### Full component example
+
+```typescript
+import { useState } from "react"
+import { signIn } from "@/lib/auth-client"
+
+export const LoginForm = () => {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    const { data, error: authError } = await signIn.email({
+      email,
+      password,
+      rememberMe: true,
+    })
+
+    if (authError) {
+      setError(authError.message)
+      setLoading(false)
+      return
+    }
+
+    // Redirect based on user type
+    if (data.user.type === "employee") {
+      window.location.href = "/dashboard/employee"
+    } else {
+      window.location.href = "/dashboard/admin"
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+        required
+      />
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Password"
+        required
+      />
+      {error && <p>{error}</p>}
+      <button type="submit" disabled={loading}>
+        {loading ? "Logging in..." : "Log in"}
+      </button>
+    </form>
+  )
+}
+```
+
+## Rate limiting
+
+Login attempts are rate-limited to **10 requests per minute per IP address**. Exceeding this limit returns a `429 Too Many Requests` response:
+
+```json
+{
+  "error": "Too many requests",
+  "code": "RATE_LIMIT_EXCEEDED"
+}
+```
+
+## Session creation
+
+Successful login creates a session with:
+
+- **Expiration**: 7 days from login
+- **Auto-refresh**: Sessions refresh after 1 day of activity
+- **Cookie cache**: 5-minute cookie cache for performance
+- **Tracking**: IP address and user agent stored for security
+
+## Error codes
+
+| Code | Description |
+|------|-------------|
+| `INVALID_CREDENTIALS` | Email or password is incorrect |
+| `RATE_LIMIT_EXCEEDED` | Too many login attempts |
+| `ACCOUNT_INACTIVE` | User account is deactivated |
+| `EMAIL_NOT_VERIFIED` | Email verification required |

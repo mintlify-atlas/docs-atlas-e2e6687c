@@ -1,0 +1,96 @@
+---
+title: Authentication
+description: User registration and login flows for employees and organizations on Biovity platform
+---
+
+Biovity provides separate authentication flows for employees (professionals, students, researchers) and organizations (companies, institutions, laboratories). The platform uses Better Auth for secure email/password authentication with 7-day sessions.
+
+## Account types
+
+Biovity supports two distinct user types:
+
+<CardGroup cols={2}>
+  <Card title="Individual users" icon="user">
+    For professionals, researchers, and students seeking job opportunities in the scientific sector
+  </Card>
+  <Card title="Organizations" icon="building">
+    For companies, institutions, and laboratories looking to hire scientific talent
+  </Card>
+</CardGroup>
+
+## Registration flow
+
+New users can create an account by selecting their account type and completing the registration form.
+
+<Steps>
+  <Step title="Select account type">
+    Navigate to the registration page and choose between "Individual User" or "Organization" account type. Each type provides different platform features and dashboard access.
+  </Step>
+  <Step title="Complete registration form">
+    Fill in your details including name, email, password, and profession (for individual users) or company information (for organizations).
+  </Step>
+  <Step title="Email verification">
+    Verify your email address to activate your account and access the platform.
+  </Step>
+  <Step title="Access dashboard">
+    Once verified, you'll be automatically redirected to your personalized dashboard based on your account type.
+  </Step>
+</Steps>
+
+## Login flow
+
+Returning users can access their accounts through a unified login page.
+
+<Steps>
+  <Step title="Navigate to login page">
+    Visit the login page where you'll see options for both individual users and organizations.
+  </Step>
+  <Step title="Select your account type">
+    Choose whether you're logging in as an individual user or organization. This determines which dashboard you'll access.
+  </Step>
+  <Step title="Enter credentials">
+    Provide your registered email and password to authenticate.
+  </Step>
+  <Step title="Access your dashboard">
+    After successful authentication, you'll be redirected to your role-specific dashboard:
+    - Individual users → Employee dashboard (`/dashboard/employee`)
+    - Organizations → Organization dashboard (`/dashboard/organization`)
+  </Step>
+</Steps>
+
+## Session management
+
+Biovity uses secure session management to keep users logged in:
+
+- **Session duration**: 7 days by default
+- **Auto-redirect**: Already logged-in users are automatically redirected to their dashboard
+- **Rate limiting**: 10 authentication requests per minute per IP address to prevent abuse
+- **Secure cookies**: Session state is persisted securely across browser sessions
+
+## Account security
+
+Your account security is protected through:
+
+- Email/password authentication
+- Secure session tokens
+- Rate limiting on authentication endpoints
+- User type validation (employee vs organization)
+- Protected dashboard routes based on account type
+
+## Custom user fields
+
+Biovity tracks additional user information beyond standard authentication:
+
+- `type`: Employee ("persona") or Organization ("organización")
+- `profession`: User's scientific specialization
+- `avatar`: Profile picture
+- `isActive`: Account status
+- `organizationId`: For linking users to their organization
+
+## Support
+
+If you encounter issues during registration or login:
+
+- Contact support at support@biovity.com
+- Visit the help center for troubleshooting guides
+- Check your email for verification links if you can't access your account

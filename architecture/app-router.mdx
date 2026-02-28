@@ -1,0 +1,243 @@
+---
+title: App router
+description: Next.js 16 App Router structure, nested layouts, and routing patterns
+---
+
+Biovity uses Next.js 16 App Router with nested layouts for a clean, type-safe routing architecture. The app supports role-based dashboards, public landing pages, and authentication flows.
+
+## Route structure
+
+The application is organized into four main route groups:
+
+```
+app/
+├── (public)                     # Landing pages
+│   ├── page.tsx                # Home
+│   ├── empresas/               # Companies
+│   ├── nosotros/               # About
+│   ├── salarios/               # Salaries
+│   └── trabajos/               # Jobs
+├── (auth)                       # Authentication
+│   ├── login/
+│   └── register/
+├── dashboard/                   # Protected routes
+│   ├── employee/
+│   └── admin/
+└── api/                         # API endpoints
+    └── auth/[...all]/
+```
+
+## Nested layouts
+
+The dashboard uses nested layouts to provide consistent navigation and sidebar across all dashboard pages.
+
+### Layout hierarchy
+
+```
+Root Layout (app/layout.tsx)
+└── Dashboard Layout (app/dashboard/employee/layout.tsx)
+    ├── Dashboard Home (app/dashboard/employee/page.tsx)
+    ├── Search (app/dashboard/employee/search/page.tsx)
+    ├── Saved Jobs (app/dashboard/employee/saved/page.tsx)
+    ├── Applications (app/dashboard/employee/applications/page.tsx)
+    ├── My Applications (app/dashboard/employee/my-applications/page.tsx)
+    ├── Messages (app/dashboard/employee/messages/page.tsx)
+    ├── Calendar (app/dashboard/employee/calendar/page.tsx)
+    ├── Metrics (app/dashboard/employee/metrics/page.tsx)
+    └── Profile (app/dashboard/employee/profile/page.tsx)
+```
+
+### Dashboard layout implementation
+
+The employee dashboard layout (`app/dashboard/employee/layout.tsx`) wraps all child pages with:
+
+<AccordionGroup>
+  <Accordion title="Sidebar navigation">
+    - Tab-based navigation for different sections
+    - Active state management with route matching
+    - Collapsible sidebar with state persisted via cookies
+  </Accordion>
+
+  <Accordion title="Shared header">
+    - User profile dropdown
+    - Logout button
+    - Notifications (future)
+  </Accordion>
+
+  <Accordion title="Content area">
+    - Renders child pages via `{children}`
+    - Consistent padding and responsive layout
+  </Accordion>
+</AccordionGroup>
+
+```tsx title="app/dashboard/employee/layout.tsx"
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <div className="flex h-screen">
+      {/* Sidebar */}
+      <Sidebar />
+      
+      {/* Main content */}
+      <main className="flex-1 overflow-y-auto">
+        <Header />
+        <div className="p-8">
+          {children}
+        </div>
+      </main>
+    </div>
+  )
+}
+```
+
+## Route patterns
+
+### Public routes
+
+Public routes are accessible without authentication:
+
+```
+/                  # Home page
+/empresas          # Companies landing
+/nosotros          # About us
+/salarios          # Salary info
+/trabajos          # Public job board
+```
+
+These pages use the `LandingLayout` component from `components/layouts/` for consistent header and footer.
+
+### Authentication routes
+
+Auth routes handle sign in and registration:
+
+```
+/login             # Login (supports employee and organization)
+/register          # Registration (supports employee and organization)
+```
+
+Both routes redirect authenticated users to the appropriate dashboard based on their `type` field.
+
+### Protected routes (employee)
+
+Employee dashboard routes require authentication and have `type: 'employee'`:
+
+```
+/dashboard/employee                 # Dashboard home
+/dashboard/employee/search          # Job search
+/dashboard/employee/saved           # Saved jobs
+/dashboard/employee/applications    # Job applications
+/dashboard/employee/my-applications # User's applications
+/dashboard/employee/messages        # Messaging
+/dashboard/employee/calendar        # Calendar
+/dashboard/employee/metrics         # Analytics
+/dashboard/employee/profile         # Profile settings
+```
+
+### Protected routes (admin)
+
+Admin routes require authentication and have `type: 'organization'`:
+
+```
+/dashboard/admin                    # Admin dashboard
+/dashboard/admin/jobs               # Job management (future)
+/dashboard/admin/applicants         # Applicant review (future)
+```
+
+## API routes
+
+### Better Auth endpoint
+
+The authentication API is handled by a catch-all route:
+
+```tsx title="app/api/auth/[...all]/route.ts"
+import { auth } from "@/lib/auth"
+import { toNextJsHandler } from "better-auth/next-js"
+
+export const { GET, POST } = toNextJsHandler(auth)
+```
+
+This route handles all Better Auth operations:
+- `POST /api/auth/sign-in` - Email/password login
+- `POST /api/auth/sign-up` - User registration
+- `POST /api/auth/sign-out` - Logout
+- `GET /api/auth/session` - Get current session
+
+## Route protection
+
+Routes are protected using middleware and server-side session checks.
+
+<AccordionGroup>
+  <Accordion title="Middleware protection">
+    Middleware checks for valid sessions on protected routes and redirects unauthenticated users to `/login`.
+  </Accordion>
+
+  <Accordion title="Role-based access">
+    Dashboard layouts check the user's `type` field:
+    - `type: 'employee'` → `/dashboard/employee/*`
+    - `type: 'organization'` → `/dashboard/admin/*`
+  </Accordion>
+
+  <Accordion title="Server component checks">
+    Page components use `auth.api.getSession()` to verify authentication server-side before rendering.
+  </Accordion>
+</AccordionGroup>
+
+## Navigation patterns
+
+### Tab-based navigation
+
+The employee dashboard uses tab-based navigation with separate content components:
+
+```tsx
+const tabs = [
+  { name: 'Search', href: '/dashboard/employee/search' },
+  { name: 'Saved', href: '/dashboard/employee/saved' },
+  { name: 'Applications', href: '/dashboard/employee/applications' },
+  // ...
+]
+```
+
+Active states are determined by matching the current pathname.
+
+### Sidebar state persistence
+
+The sidebar's collapsed/expanded state is persisted via cookies:
+
+```tsx
+// Set cookie on toggle
+document.cookie = `sidebar-collapsed=${collapsed}; path=/; max-age=31536000`
+
+// Read cookie on mount
+const collapsed = document.cookie.includes('sidebar-collapsed=true')
+```
+
+## Performance optimizations
+
+<AccordionGroup>
+  <Accordion title="Turbopack">
+    Development server uses Turbopack for fast hot module replacement (HMR).
+  </Accordion>
+
+  <Accordion title="Server components by default">
+    All pages are React Server Components unless marked with `'use client'`, reducing JavaScript bundle size.
+  </Accordion>
+
+  <Accordion title="Nested layouts">
+    Only the child page re-renders on navigation; the dashboard layout stays mounted.
+  </Accordion>
+
+  <Accordion title="Route prefetching">
+    Next.js automatically prefetches linked routes on hover for instant navigation.
+  </Accordion>
+</AccordionGroup>
+
+## Best practices
+
+- Use nested layouts for consistent UI across related routes
+- Protect routes with middleware and server-side session checks
+- Implement role-based routing with user `type` field
+- Persist UI state (like sidebar) via cookies for better UX
+- Keep API routes minimal and delegate logic to `lib/` modules

@@ -1,0 +1,337 @@
+---
+title: Register
+description: Email/password registration endpoint and client usage for Biovity authentication
+---
+
+Create new user accounts with email, password, and custom fields.
+
+## Endpoint
+
+```
+POST /api/auth/sign-up/email
+```
+
+## Request parameters
+
+<ParamField body="email" type="string" required>
+  User's email address (must be unique)
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  User's password (minimum 8 characters recommended)
+</ParamField>
+
+<ParamField body="name" type="string" required>
+  User's full name
+</ParamField>
+
+<ParamField body="type" type="string" required>
+  User type: `employee` or `organization`
+</ParamField>
+
+<ParamField body="profession" type="string" required>
+  User's professional designation or field (e.g., "Biotechnology Engineer")
+</ParamField>
+
+<ParamField body="avatar" type="string">
+  URL to user's profile avatar image
+</ParamField>
+
+<ParamField body="organizationId" type="string">
+  Associated organization ID (for employee users)
+</ParamField>
+
+## Request example
+
+### Employee registration
+
+```json
+{
+  "email": "john@example.com",
+  "password": "securePassword123",
+  "name": "John Doe",
+  "type": "employee",
+  "profession": "Biochemistry Specialist",
+  "avatar": "https://example.com/avatars/john.jpg"
+}
+```
+
+### Organization registration
+
+```json
+{
+  "email": "contact@biotech-company.com",
+  "password": "securePassword123",
+  "name": "BioTech Company",
+  "type": "organization",
+  "profession": "Biotechnology Research"
+}
+```
+
+## Response
+
+### Success response
+
+<ResponseField name="user" type="object">
+  Created user object
+  
+  <ResponseField name="id" type="string">
+    Unique user identifier (UUID)
+  </ResponseField>
+  
+  <ResponseField name="email" type="string">
+    User's email address
+  </ResponseField>
+  
+  <ResponseField name="name" type="string">
+    User's full name
+  </ResponseField>
+  
+  <ResponseField name="type" type="string">
+    User type: `employee` or `organization`
+  </ResponseField>
+  
+  <ResponseField name="profession" type="string">
+    User's professional designation
+  </ResponseField>
+  
+  <ResponseField name="avatar" type="string">
+    Profile avatar URL
+  </ResponseField>
+  
+  <ResponseField name="isActive" type="boolean" default="false">
+    Account activation status (default: false)
+  </ResponseField>
+  
+  <ResponseField name="organizationId" type="string">
+    Associated organization ID (for employees)
+  </ResponseField>
+  
+  <ResponseField name="isEmailVerified" type="boolean" default="false">
+    Email verification status (default: false)
+  </ResponseField>
+  
+  <ResponseField name="createdAt" type="string">
+    Account creation timestamp (ISO 8601)
+  </ResponseField>
+  
+  <ResponseField name="updatedAt" type="string">
+    Last update timestamp (ISO 8601)
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="session" type="object">
+  Session information (user is automatically logged in)
+  
+  <ResponseField name="token" type="string">
+    Session token
+  </ResponseField>
+  
+  <ResponseField name="expiresAt" type="string">
+    Session expiration timestamp (ISO 8601)
+  </ResponseField>
+</ResponseField>
+
+### Success example
+
+```json
+{
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "email": "john@example.com",
+    "name": "John Doe",
+    "type": "employee",
+    "profession": "Biochemistry Specialist",
+    "avatar": "https://example.com/avatars/john.jpg",
+    "isActive": false,
+    "organizationId": null,
+    "isEmailVerified": false,
+    "createdAt": "2026-02-28T14:22:00.000Z",
+    "updatedAt": "2026-02-28T14:22:00.000Z"
+  },
+  "session": {
+    "token": "session_abc123def456",
+    "expiresAt": "2026-03-07T14:22:00.000Z"
+  }
+}
+```
+
+### Error response
+
+<ResponseField name="error" type="string">
+  Error message describing the failure
+</ResponseField>
+
+<ResponseField name="code" type="string">
+  Error code identifier
+</ResponseField>
+
+### Error example
+
+```json
+{
+  "error": "Email already exists",
+  "code": "EMAIL_EXISTS"
+}
+```
+
+## Client usage
+
+### React hook
+
+Use the `signUp` method from the auth client:
+
+```typescript
+import { signUp } from "@/lib/auth-client"
+
+const handleRegister = async () => {
+  const { data, error } = await signUp.email({
+    email: "john@example.com",
+    password: "securePassword123",
+    name: "John Doe",
+    type: "employee",
+    profession: "Biochemistry Specialist",
+    avatar: "https://example.com/avatars/john.jpg",
+  })
+
+  if (error) {
+    console.error("Registration failed:", error)
+    return
+  }
+
+  console.log("Registered:", data.user)
+}
+```
+
+### Full component example
+
+```typescript
+import { useState } from "react"
+import { signUp } from "@/lib/auth-client"
+
+export const RegisterForm = () => {
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    name: "",
+    type: "employee" as "employee" | "organization",
+    profession: "",
+    avatar: "",
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    const { data, error: authError } = await signUp.email(formData)
+
+    if (authError) {
+      setError(authError.message)
+      setLoading(false)
+      return
+    }
+
+    // Redirect based on user type
+    if (data.user.type === "employee") {
+      window.location.href = "/dashboard/employee"
+    } else {
+      window.location.href = "/dashboard/admin"
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="email"
+        value={formData.email}
+        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+        placeholder="Email"
+        required
+      />
+      <input
+        type="password"
+        value={formData.password}
+        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+        placeholder="Password"
+        required
+      />
+      <input
+        type="text"
+        value={formData.name}
+        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        placeholder="Full name"
+        required
+      />
+      <select
+        value={formData.type}
+        onChange={(e) =>
+          setFormData({
+            ...formData,
+            type: e.target.value as "employee" | "organization",
+          })
+        }
+      >
+        <option value="employee">Employee</option>
+        <option value="organization">Organization</option>
+      </select>
+      <input
+        type="text"
+        value={formData.profession}
+        onChange={(e) => setFormData({ ...formData, profession: e.target.value })}
+        placeholder="Profession"
+        required
+      />
+      {error && <p>{error}</p>}
+      <button type="submit" disabled={loading}>
+        {loading ? "Registering..." : "Register"}
+      </button>
+    </form>
+  )
+}
+```
+
+## Rate limiting
+
+Registration attempts are rate-limited to **10 requests per minute per IP address**. Exceeding this limit returns a `429 Too Many Requests` response:
+
+```json
+{
+  "error": "Too many requests",
+  "code": "RATE_LIMIT_EXCEEDED"
+}
+```
+
+## Auto-login
+
+Successful registration automatically creates a session and logs the user in:
+
+- **Expiration**: 7 days from registration
+- **Auto-refresh**: Sessions refresh after 1 day of activity
+- **Cookie cache**: 5-minute cookie cache for performance
+- **Tracking**: IP address and user agent stored for security
+
+## ID generation
+
+User IDs are automatically generated using `crypto.randomUUID()` and follow UUID v4 format:
+
+```typescript
+advanced: {
+  database: {
+    generateId: () => crypto.randomUUID(),
+  },
+}
+```
+
+## Error codes
+
+| Code | Description |
+|------|-------------|
+| `EMAIL_EXISTS` | Email address is already registered |
+| `INVALID_EMAIL` | Email format is invalid |
+| `WEAK_PASSWORD` | Password does not meet requirements |
+| `RATE_LIMIT_EXCEEDED` | Too many registration attempts |
+| `MISSING_REQUIRED_FIELD` | Required field is missing |
+| `INVALID_USER_TYPE` | User type must be `employee` or `organization` |

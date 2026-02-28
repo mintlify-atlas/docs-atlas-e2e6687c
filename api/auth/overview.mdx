@@ -1,0 +1,190 @@
+---
+title: Authentication overview
+description: Better Auth configuration, endpoints, and security features for Biovity authentication
+---
+
+Biovity uses [Better Auth](https://better-auth.com) for authentication with custom user fields and email/password provider.
+
+## Base configuration
+
+The authentication system is configured in `lib/auth.ts` (server) and `lib/auth-client.ts` (client).
+
+### Server configuration
+
+```typescript lib/auth.ts
+import { betterAuth } from "better-auth"
+import { pool } from "@/lib/db"
+
+export const auth = betterAuth({
+  database: pool,
+  rateLimit: {
+    enabled: true,
+    window: 60, // 1 minute
+    max: 10, // 10 requests per minute per IP
+  },
+  emailAndPassword: {
+    enabled: true,
+  },
+  // ... additional configuration
+})
+```
+
+### Client configuration
+
+```typescript lib/auth-client.ts
+import { createAuthClient } from "better-auth/react"
+import { inferAdditionalFields } from "better-auth/client/plugins"
+
+export const authClient = createAuthClient({
+  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  plugins: [
+    inferAdditionalFields({
+      user: {
+        type: { type: "string", required: true },
+        profession: { type: "string", required: true },
+        avatar: { type: "string", required: false },
+        isActive: { type: "boolean", required: false },
+        organizationId: { type: "string", required: false },
+      },
+    }),
+  ],
+})
+```
+
+## API endpoints
+
+All authentication endpoints are served through the Next.js API route at `/api/auth/*`.
+
+```typescript app/api/auth/[...all]/route.ts
+import { toNextJsHandler } from "better-auth/next-js"
+import { auth } from "@/lib/auth"
+
+export const { POST, GET } = toNextJsHandler(auth)
+```
+
+### Available endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/auth/sign-in/email` | POST | Email/password login |
+| `/api/auth/sign-up/email` | POST | Email/password registration |
+| `/api/auth/sign-out` | POST | End user session |
+| `/api/auth/session` | GET | Get current session |
+
+## Security features
+
+### Rate limiting
+
+Rate limiting is enabled to prevent brute force attacks:
+
+<ParamField path="window" type="number" default="60">
+  Time window in seconds for rate limit calculation
+</ParamField>
+
+<ParamField path="max" type="number" default="10">
+  Maximum requests allowed per IP address within the window
+</ParamField>
+
+### Session management
+
+Sessions are configured with the following parameters:
+
+<ParamField path="expiresIn" type="number" default="604800">
+  Session expiration time in seconds (7 days)
+</ParamField>
+
+<ParamField path="updateAge" type="number" default="86400">
+  Session refresh interval in seconds (1 day). Sessions automatically refresh after 1 day of activity.
+</ParamField>
+
+<ParamField path="cookieCache.enabled" type="boolean" default="true">
+  Enable cookie-based session caching
+</ParamField>
+
+<ParamField path="cookieCache.maxAge" type="number" default="300">
+  Cookie cache duration in seconds (5 minutes)
+</ParamField>
+
+### Secure cookies
+
+Cookies are configured to use secure flags in production:
+
+```typescript
+advanced: {
+  useSecureCookies: process.env.NODE_ENV === "production",
+}
+```
+
+## Custom user fields
+
+Biovity extends the default Better Auth user model with additional fields:
+
+<ResponseField name="type" type="string" required>
+  User type: `employee` or `organization`
+</ResponseField>
+
+<ResponseField name="profession" type="string" required>
+  User's professional designation or field
+</ResponseField>
+
+<ResponseField name="avatar" type="string">
+  URL to user's profile avatar image
+</ResponseField>
+
+<ResponseField name="isActive" type="boolean">
+  Account activation status
+</ResponseField>
+
+<ResponseField name="organizationId" type="string">
+  Associated organization ID for employee users
+</ResponseField>
+
+<ResponseField name="verificationToken" type="string">
+  Email verification token (internal use only)
+</ResponseField>
+
+## Database schema
+
+Better Auth uses custom field mappings for PostgreSQL:
+
+### User table
+
+```typescript
+user: {
+  modelName: "user",
+  fields: {
+    email: "email",
+    name: "name",
+    emailVerified: "isEmailVerified",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
+  },
+}
+```
+
+### Session table
+
+```typescript
+session: {
+  modelName: "session",
+  fields: {
+    userId: "user_id",
+    expiresAt: "expires_at",
+    token: "token",
+    ipAddress: "ip_address",
+    userAgent: "user_agent",
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  },
+}
+```
+
+## Logging
+
+Logging level is environment-dependent:
+
+```typescript
+logger: {
+  level: process.env.NODE_ENV === "production" ? "error" : "debug",
+}
+```

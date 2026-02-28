@@ -1,0 +1,240 @@
+---
+title: Formatting
+description: Utility functions for formatting currency, dates, and badge colors in Biovity
+---
+
+Formatting utilities for displaying currency (CLP), dates (Spanish locale), and badge styling throughout the application.
+
+## Currency formatting
+
+### formatCurrencyCLP
+
+Formats a number as Chilean Pesos (CLP) in thousands for salary charts.
+
+<ParamField path="value" type="number" required>
+  Salary value in thousands (e.g. 2550 for $2.550.000)
+</ParamField>
+
+<ResponseField name="return" type="string">
+  Formatted currency string with CLP symbol and thousands separators (e.g. "$2.550.000")
+</ResponseField>
+
+```typescript
+import { formatCurrencyCLP } from '@/lib/utils'
+
+formatCurrencyCLP(2550) // "$2.550.000"
+formatCurrencyCLP(1200) // "$1.200.000"
+formatCurrencyCLP(850)  // "$850.000"
+```
+
+### formatSalarioRango
+
+Formats a salary range for job listings.
+
+<ParamField path="min" type="number" required>
+  Minimum salary amount
+</ParamField>
+
+<ParamField path="max" type="number" required>
+  Maximum salary amount
+</ParamField>
+
+<ResponseField name="return" type="string">
+  Formatted salary range string (e.g. "$2.500.000 - $3.500.000")
+</ResponseField>
+
+```typescript
+import { formatSalarioRango } from '@/lib/utils'
+
+formatSalarioRango(2500000, 3500000) 
+// "$2.500.000 - $3.500.000"
+
+formatSalarioRango(1800000, 2200000) 
+// "$1.800.000 - $2.200.000"
+```
+
+## Date formatting
+
+### formatFechaRelativa
+
+Formats a date as relative time in Spanish (e.g. "Hoy", "Ayer", "hace 3 días").
+
+<ParamField path="fecha" type="Date" required>
+  Date object to format
+</ParamField>
+
+<ResponseField name="return" type="string">
+  Relative date string in Spanish:
+  - "Hoy" - Today
+  - "Ayer" - Yesterday
+  - "hace X días" - X days ago (2-6 days)
+  - "hace X semanas" - X weeks ago (7-29 days)
+  - "hace X meses" - X months ago (30+ days)
+</ResponseField>
+
+```typescript
+import { formatFechaRelativa } from '@/lib/utils'
+
+const today = new Date()
+formatFechaRelativa(today) // "Hoy"
+
+const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+formatFechaRelativa(yesterday) // "Ayer"
+
+const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+formatFechaRelativa(threeDaysAgo) // "hace 3 días"
+
+const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
+formatFechaRelativa(twoWeeksAgo) // "hace 2 semanas"
+```
+
+### formatFechaLarga
+
+Formats a date as a long-form Spanish locale string for detail pages.
+
+<ParamField path="fecha" type="Date" required>
+  Date object to format
+</ParamField>
+
+<ResponseField name="return" type="string">
+  Long-form date string in Spanish (e.g. "25 de enero de 2025")
+</ResponseField>
+
+```typescript
+import { formatFechaLarga } from '@/lib/utils'
+
+const date = new Date('2025-01-25')
+formatFechaLarga(date) // "25 de enero de 2025"
+
+const date2 = new Date('2024-12-15')
+formatFechaLarga(date2) // "15 de diciembre de 2024"
+```
+
+## Badge styling
+
+### getModalidadBadgeColor
+
+Returns Tailwind CSS classes for job modality badges.
+
+<ParamField path="modalidad" type="string" required>
+  Job modality: "remoto", "hibrido", "presencial", or other
+</ParamField>
+
+<ResponseField name="return" type="string">
+  Tailwind CSS classes for badge background and text color:
+  - "remoto" → "bg-green-100 text-green-800"
+  - "hibrido" → "bg-blue-100 text-blue-800"
+  - "presencial" → "bg-purple-100 text-purple-800"
+  - default → "bg-gray-100 text-gray-800"
+</ResponseField>
+
+```typescript
+import { getModalidadBadgeColor } from '@/lib/utils'
+
+getModalidadBadgeColor('remoto')      // "bg-green-100 text-green-800"
+getModalidadBadgeColor('hibrido')     // "bg-blue-100 text-blue-800"
+getModalidadBadgeColor('presencial')  // "bg-purple-100 text-purple-800"
+getModalidadBadgeColor('otro')        // "bg-gray-100 text-gray-800"
+
+// Usage in component
+<span className={`px-3 py-1 rounded-full text-sm ${getModalidadBadgeColor(job.modalidad)}`}>
+  {job.modalidad}
+</span>
+```
+
+### getFormatoBadgeColor
+
+Returns Tailwind CSS classes for job format badges.
+
+<ParamField path="formato" type="string" required>
+  Job format: "full-time", "part-time", "contrato", or other
+</ParamField>
+
+<ResponseField name="return" type="string">
+  Tailwind CSS classes for badge background and text color:
+  - "full-time" → "bg-indigo-100 text-indigo-800"
+  - "part-time" → "bg-cyan-100 text-cyan-800"
+  - "contrato" → "bg-orange-100 text-orange-800"
+  - default → "bg-gray-100 text-gray-800"
+</ResponseField>
+
+```typescript
+import { getFormatoBadgeColor } from '@/lib/utils'
+
+getFormatoBadgeColor('full-time')  // "bg-indigo-100 text-indigo-800"
+getFormatoBadgeColor('part-time')  // "bg-cyan-100 text-cyan-800"
+getFormatoBadgeColor('contrato')   // "bg-orange-100 text-orange-800"
+getFormatoBadgeColor('otro')       // "bg-gray-100 text-gray-800"
+
+// Usage in component
+<span className={`px-3 py-1 rounded-full text-sm ${getFormatoBadgeColor(job.formato)}`}>
+  {job.formato}
+</span>
+```
+
+## Usage examples
+
+### Job listing card
+
+```typescript
+import { 
+  formatSalarioRango, 
+  formatFechaRelativa,
+  getModalidadBadgeColor,
+  getFormatoBadgeColor 
+} from '@/lib/utils'
+
+function JobCard({ job }) {
+  return (
+    <div className="border rounded-lg p-4">
+      <h3>{job.title}</h3>
+      
+      <div className="flex gap-2 mt-2">
+        <span className={`px-3 py-1 rounded-full text-sm ${getModalidadBadgeColor(job.modalidad)}`}>
+          {job.modalidad}
+        </span>
+        <span className={`px-3 py-1 rounded-full text-sm ${getFormatoBadgeColor(job.formato)}`}>
+          {job.formato}
+        </span>
+      </div>
+      
+      <p className="mt-2 text-lg font-semibold">
+        {formatSalarioRango(job.salaryMin, job.salaryMax)}
+      </p>
+      
+      <p className="mt-1 text-sm text-gray-600">
+        Publicado {formatFechaRelativa(job.publishedAt)}
+      </p>
+    </div>
+  )
+}
+```
+
+### Salary chart
+
+```typescript
+import { formatCurrencyCLP } from '@/lib/utils'
+
+const salaryData = [
+  { role: 'Junior', salary: 1200 },
+  { role: 'Mid', salary: 2550 },
+  { role: 'Senior', salary: 4200 },
+]
+
+function SalaryChart() {
+  return (
+    <div>
+      {salaryData.map(item => (
+        <div key={item.role} className="flex justify-between">
+          <span>{item.role}</span>
+          <span>{formatCurrencyCLP(item.salary)}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+```
+
+## Source
+
+Defined in `lib/utils.ts:8-72`
