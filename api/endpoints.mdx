@@ -1,0 +1,311 @@
+---
+title: API endpoints
+description: REST API endpoints available in Biovity platform
+---
+
+Biovity provides several REST API endpoints for various platform features. All endpoints follow RESTful conventions and return JSON responses.
+
+## Base URL
+
+```
+https://biovity.cl/api
+```
+
+For local development:
+```
+http://localhost:3000/api
+```
+
+## Available endpoints
+
+### Authentication
+
+Better Auth provides a complete authentication API at `/api/auth/[...all]`.
+
+See the [Authentication API documentation](/api/auth/overview) for detailed endpoint information.
+
+**Base path:** `/api/auth/`
+
+Key endpoints:
+- `POST /api/auth/sign-in/email` - User login
+- `POST /api/auth/sign-up/email` - User registration
+- `GET /api/auth/session` - Get current session
+- `POST /api/auth/sign-out` - User logout
+
+---
+
+### Waitlist
+
+Register users for early access or beta features.
+
+**POST /api/waitlist**
+
+<ParamField path="email" type="string" required>
+  Valid email address (unique constraint)
+</ParamField>
+
+<ParamField path="role" type="enum" required>
+  Either "professional" or "empresa"
+</ParamField>
+
+<ParamField path="name" type="string">
+  User's full name
+</ParamField>
+
+<ParamField path="field" type="string">
+  Scientific field (for professionals)
+</ParamField>
+
+<ParamField path="company" type="string">
+  Company name (for organizations)
+</ParamField>
+
+**Request example:**
+
+```typescript
+const response = await fetch('/api/waitlist', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    email: 'user@example.com',
+    role: 'professional',
+    name: 'María González',
+    field: 'Biotecnología'
+  })
+})
+
+const data = await response.json()
+```
+
+**Success response (200):**
+
+```json
+{
+  "success": true
+}
+```
+
+**Error responses:**
+
+<ResponseField name="400 Bad Request" type="object">
+  Invalid data format or missing required fields
+  ```json
+  {
+    "error": "Datos inválidos"
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="409 Conflict" type="object">
+  Email already registered in waitlist
+  ```json
+  {
+    "error": "Ya estás registrado. Pronto te contactaremos."
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="429 Too Many Requests" type="object">
+  Rate limit exceeded (includes Retry-After header)
+  ```json
+  {
+    "error": "Demasiados intentos. Intenta más tarde."
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="500 Internal Server Error" type="object">
+  Server error during processing
+  ```json
+  {
+    "error": "Error al guardar. Intenta de nuevo."
+  }
+  ```
+</ResponseField>
+
+**Rate limiting:**
+
+The waitlist endpoint is rate-limited by IP address to prevent abuse. See the rate limiting section below.
+
+---
+
+### OpenGraph Images
+
+Generate optimized social media preview images.
+
+**GET /api/og**
+
+Returns a JPEG image optimized for social media sharing (WhatsApp, Facebook, Twitter).
+
+**Features:**
+- Generated from PNG and converted to JPEG for smaller file size
+- Quality: 80 with mozjpeg optimization
+- Maximum 600KB for WhatsApp compatibility
+- Cached for 1 year (immutable)
+
+**Response:**
+
+```
+Content-Type: image/jpeg
+Cache-Control: public, max-age=31536000, immutable
+```
+
+**Usage in meta tags:**
+
+```html
+<meta property="og:image" content="https://biovity.cl/api/og" />
+<meta name="twitter:image" content="https://biovity.cl/api/og" />
+```
+
+---
+
+### Cron Jobs
+
+Scheduled background tasks endpoint (protected).
+
+**POST /api/cron**
+
+This endpoint is used by external cron services (like Vercel Cron or similar) to trigger scheduled tasks.
+
+<Warning>
+This endpoint should be protected with authentication tokens in production to prevent unauthorized access.
+</Warning>
+
+**Common use cases:**
+- Send daily job alert emails
+- Clean up expired sessions
+- Update job posting statistics
+- Generate weekly reports
+- Archive old applications
+
+---
+
+## Rate limiting
+
+API endpoints implement rate limiting to prevent abuse and ensure fair usage.
+
+### Implementation
+
+Rate limiting is applied per IP address using the `x-forwarded-for` or `x-real-ip` headers:
+
+```typescript title="lib/rate-limit.ts"
+import { checkRateLimit } from '@/lib/rate-limit'
+
+const identifier = getClientIdentifier(request)
+const { allowed, retryAfter } = checkRateLimit(identifier)
+
+if (!allowed) {
+  return NextResponse.json(
+    { error: "Too many requests" },
+    { 
+      status: 429, 
+      headers: { "Retry-After": String(retryAfter) } 
+    }
+  )
+}
+```
+
+### Rate limits by endpoint
+
+| Endpoint | Limit | Window |
+|----------|-------|--------|
+| `/api/waitlist` | 5 requests | 1 minute |
+| `/api/auth/*` | 10 requests | 1 minute (configured in Better Auth) |
+| `/api/cron` | Unlimited | Token-protected |
+| `/api/og` | Unlimited | Cached response |
+
+### Handling rate limits
+
+When a rate limit is exceeded:
+
+1. Response status: `429 Too Many Requests`
+2. `Retry-After` header indicates seconds to wait
+3. Error message in Spanish for user-facing endpoints
+
+**Client-side handling:**
+
+```typescript
+try {
+  const response = await fetch('/api/waitlist', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
+  
+  if (response.status === 429) {
+    const retryAfter = response.headers.get('Retry-After')
+    console.log(`Rate limited. Retry after ${retryAfter} seconds`)
+    // Show user-friendly message
+  }
+  
+  const result = await response.json()
+} catch (error) {
+  // Handle network errors
+}
+```
+
+## Error handling
+
+All API endpoints follow consistent error response patterns:
+
+### Standard error format
+
+```json
+{
+  "error": "Human-readable error message",
+  "code": "ERROR_CODE", // Optional
+  "details": {} // Optional additional context
+}
+```
+
+### Common HTTP status codes
+
+- **200 OK**: Successful request
+- **201 Created**: Resource successfully created
+- **400 Bad Request**: Invalid request data
+- **401 Unauthorized**: Authentication required
+- **403 Forbidden**: Insufficient permissions
+- **404 Not Found**: Resource doesn't exist
+- **409 Conflict**: Resource conflict (e.g., duplicate email)
+- **429 Too Many Requests**: Rate limit exceeded
+- **500 Internal Server Error**: Server-side error
+
+## CORS policy
+
+API endpoints are configured for same-origin requests by default. For cross-origin requests from approved domains, CORS headers are configured in `next.config.ts`.
+
+## Authentication
+
+Most endpoints require authentication via Better Auth session cookies. See [Authentication Flow](/architecture/authentication-flow) for implementation details.
+
+**Protected endpoints:**
+- All `/dashboard/*` routes
+- Job application endpoints
+- Messaging endpoints
+- Profile management
+
+**Public endpoints:**
+- `/api/auth/*` (except session validation)
+- `/api/waitlist`
+- `/api/og`
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication API" icon="lock" href="/api/auth/overview">
+    Detailed authentication endpoint documentation
+  </Card>
+  
+  <Card title="Waitlist feature" icon="list" href="/features/waitlist">
+    Learn about the waitlist feature and user flows
+  </Card>
+  
+  <Card title="Rate limiting" icon="shield" href="/architecture/authentication-flow">
+    Security and rate limiting implementation
+  </Card>
+  
+  <Card title="Environment variables" icon="key" href="/deployment/environment-variables">
+    Configure API endpoints for production
+  </Card>
+</CardGroup>

@@ -48,7 +48,10 @@
               "features/job-search",
               "features/applications",
               "features/company-profiles",
-              "features/messaging"
+              "features/messaging",
+              "features/pricing-plans",
+              "features/blog",
+              "features/waitlist"
             ]
           },
           {
@@ -82,6 +85,12 @@
       {
         "tab": "API Reference",
         "groups": [
+          {
+            "group": "Endpoints",
+            "pages": [
+              "api/endpoints"
+            ]
+          },
           {
             "group": "Authentication",
             "pages": [

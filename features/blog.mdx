@@ -1,0 +1,170 @@
+---
+title: Blog and content
+description: Career resources and industry insights for scientific professionals
+---
+
+Biovity provides a content platform with articles, guides, and resources to help scientific professionals advance their careers and stay informed about the biotechnology job market.
+
+## Blog features
+
+The Biovity blog offers valuable content for both job seekers and employers in the scientific sector.
+
+<CardGroup cols={2}>
+  <Card title="Career advice" icon="graduation-cap">
+    Tips for building a career in biotechnology, biochemistry, and related fields
+  </Card>
+  
+  <Card title="Industry insights" icon="chart-line">
+    Trends and analysis of the Chilean scientific job market
+  </Card>
+  
+  <Card title="Company spotlights" icon="building">
+    Profiles of innovative companies in the scientific sector
+  </Card>
+  
+  <Card title="Interview guides" icon="comments">
+    Preparation tips and common questions for scientific roles
+  </Card>
+</CardGroup>
+
+## Accessing the blog
+
+### Public blog page
+
+All blog content is available at `/blog` route to both registered and non-registered users.
+
+**Features:**
+- Browse all published articles
+- Filter by category or topic
+- Search for specific content
+- Share articles on social media
+
+### Individual articles
+
+Each article has its own dedicated page at `/blog/[slug]` with:
+
+- Full article content with rich formatting
+- Author information and publication date
+- Related articles and recommendations
+- Comment section (for registered users)
+- Social sharing options
+
+## Content categories
+
+Blog articles are organized into relevant categories for the scientific community:
+
+### Career development
+
+- Resume writing for scientists
+- Networking in the biotech industry
+- Professional development opportunities
+- Transitioning between scientific fields
+- Work-life balance in research
+
+### Job market insights
+
+- Salary trends in biotechnology
+- Most in-demand scientific skills
+- Regional job market analysis
+- Industry growth forecasts
+- Remote work opportunities in science
+
+### Technical skills
+
+- Laboratory techniques and certifications
+- Software and tools for scientists
+- Data analysis and bioinformatics
+- Research methodologies
+- Regulatory compliance
+
+### Company culture
+
+- What to look for in a biotech employer
+- Workplace culture in scientific companies
+- Startup vs. established company environments
+- Research vs. industry positions
+- Career paths in pharmaceutical companies
+
+## For employers
+
+Companies can benefit from blog content by:
+
+- Understanding candidate expectations
+- Learning about current hiring trends
+- Discovering best practices for recruiting scientists
+- Building employer brand awareness
+- Staying informed about industry developments
+
+<Tip>Enterprise plan customers may have opportunities for sponsored content or company spotlight features. Contact your account manager for details.</Tip>
+
+## Content format
+
+Articles are published using MDX (Markdown with JSX components) for rich, interactive content:
+
+- **Code snippets** for technical tutorials
+- **Interactive charts** for data visualization
+- **Embedded videos** for demonstrations
+- **Image galleries** for visual content
+- **Call-to-action buttons** linking to relevant jobs or resources
+
+## Publishing schedule
+
+New articles are published regularly:
+
+- **Career advice**: Weekly
+- **Industry insights**: Bi-weekly
+- **Company spotlights**: Monthly
+- **Interview guides**: As needed
+
+## Newsletter integration
+
+Subscribe to receive blog updates via email:
+
+1. Articles matching your professional interests
+2. New job opportunities in your field
+3. Curated career resources
+4. Industry news and trends
+
+<Info>Newsletter subscriptions can be managed from your user profile settings</Info>
+
+## Technical implementation
+
+The blog is built using Next.js and MDX for optimal performance:
+
+```typescript title="app/blog/page.tsx"
+// Blog listing page showing all published articles
+// Includes filtering, search, and pagination
+```
+
+```typescript title="app/blog/[slug]/page.tsx"
+// Individual article page with dynamic routing
+// Fetches content from MDX files or CMS
+```
+
+Blog content is stored in `content/` directory and parsed using `next-mdx-remote` for server-side rendering.
+
+## For content contributors
+
+<Accordion title="How to submit an article">
+Registered users with professional profiles can submit article proposals through the dashboard. The Biovity editorial team reviews submissions for quality and relevance before publication.
+</Accordion>
+
+<Accordion title="Content guidelines">
+All articles must be relevant to the scientific job market, career development, or industry insights. Content should be original, well-researched, and provide value to the community.
+</Accordion>
+
+<Accordion title="Author attribution">
+Published articles include author bylines with links to author profiles. This helps build professional credibility and visibility in the community.
+</Accordion>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Browse blog content" icon="newspaper" href="/blog">
+    Read the latest articles and career resources
+  </Card>
+  
+  <Card title="Subscribe to updates" icon="envelope" href="/features/user-dashboard">
+    Get blog updates and job alerts in your dashboard
+  </Card>
+</CardGroup>

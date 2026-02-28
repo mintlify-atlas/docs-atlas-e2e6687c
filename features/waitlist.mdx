@@ -1,0 +1,234 @@
+---
+title: Waitlist
+description: Pre-launch registration for early access to Biovity platform
+---
+
+Biovity offers a waitlist feature for collecting early interest from professionals and organizations before full platform launch or for access to new features.
+
+## Waitlist page
+
+The waitlist is accessible at `/lista-espera` (Spanish for "waiting list") and allows users to register their interest in the platform.
+
+<Info>
+The waitlist feature is designed for pre-launch campaigns or limited beta access to new features.
+</Info>
+
+## Registration types
+
+The waitlist supports two types of registrations:
+
+<CardGroup cols={2}>
+  <Card title="Professionals" icon="user">
+    Scientists, researchers, and students looking for job opportunities
+  </Card>
+  
+  <Card title="Organizations" icon="building">
+    Companies and institutions seeking to hire scientific talent
+  </Card>
+</CardGroup>
+
+## Waitlist form
+
+Users provide the following information when joining the waitlist:
+
+### For professionals
+
+- **Full name**: First and last name
+- **Email address**: For communication and platform access
+- **Role type**: "professional" designation
+- **Scientific field**: Area of expertise (biotechnology, biochemistry, chemistry, etc.)
+- **Current position**: Student, researcher, or professional level
+- **Location**: City/region in Chile
+
+### For organizations
+
+- **Company name**: Organization name
+- **Email address**: Business email for communication
+- **Role type**: "empresa" (company) designation  
+- **Industry sector**: Type of scientific organization
+- **Company size**: Number of employees
+- **Hiring needs**: Expected number of positions to fill
+
+## Technical implementation
+
+### Database schema
+
+Waitlist registrations are stored in PostgreSQL:
+
+```sql title="lib/db/migrations/001_waitlist.sql"
+CREATE TABLE IF NOT EXISTS waitlist (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL,
+  name TEXT NOT NULL,
+  role TEXT NOT NULL,
+  field TEXT,
+  company TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+ALTER TABLE waitlist 
+  ADD CONSTRAINT waitlist_email_key UNIQUE (email);
+```
+
+### API endpoint
+
+Waitlist registrations are processed through the `/api/waitlist` endpoint:
+
+**POST /api/waitlist**
+
+Accepts registration data and stores it in the database.
+
+```typescript title="Request body"
+{
+  email: string;
+  name: string;
+  role: "professional" | "empresa";
+  field?: string;
+  company?: string;
+}
+```
+
+**Validation:**
+
+The request is validated using Zod schemas defined in `lib/validations/waitlist.ts`:
+
+```typescript
+import { waitlistSchema } from '@/lib/validations'
+
+// Validates email format, required fields, and role type
+const result = waitlistSchema.parse(formData)
+```
+
+**Response:**
+
+```typescript
+{
+  success: boolean;
+  message: string;
+  data?: {
+    id: string;
+    email: string;
+  }
+}
+```
+
+## Validation rules
+
+<ParamField path="email" type="string" required>
+  Must be a valid email format. Unique constraint prevents duplicate registrations.
+</ParamField>
+
+<ParamField path="name" type="string" required>
+  Full name, minimum 2 characters
+</ParamField>
+
+<ParamField path="role" type="enum" required>
+  Either "professional" or "empresa". Determines follow-up communication and onboarding flow.
+</ParamField>
+
+<ParamField path="field" type="string">
+  Scientific field of interest (for professionals). Examples: "Biotecnología", "Bioquímica", "Química"
+</ParamField>
+
+<ParamField path="company" type="string">
+  Company name (for organizations). Required when role is "empresa"
+</ParamField>
+
+## Email notifications
+
+After successful registration:
+
+<Steps>
+  <Step title="Confirmation email">
+    User receives immediate confirmation of waitlist registration
+  </Step>
+  
+  <Step title="Welcome series">
+    Automated email series introducing Biovity features and benefits
+  </Step>
+  
+  <Step title="Launch notification">
+    When platform opens, waitlist members receive priority access invitation
+  </Step>
+</Steps>
+
+## Admin management
+
+The admin dashboard (`/dashboard/admin`) includes waitlist management:
+
+- View all registrations
+- Filter by role type (professional vs. organization)
+- Export data for email campaigns
+- Track registration metrics over time
+- Send batch invitations when platform launches
+
+## Priority access
+
+Waitlist members receive benefits when the platform launches:
+
+<CardGroup cols={2}>
+  <Card title="Early access" icon="key">
+    First to receive platform invitations before public launch
+  </Card>
+  
+  <Card title="Exclusive benefits" icon="gift">
+    Special offers or extended trial periods for early adopters
+  </Card>
+  
+  <Card title="Feature influence" icon="lightbulb">
+    Opportunity to provide feedback on beta features
+  </Card>
+  
+  <Card title="Community building" icon="users">
+    Connect with other early members in the scientific community
+  </Card>
+</CardGroup>
+
+## Marketing integration
+
+The waitlist integrates with marketing tools for growth:
+
+- **Email campaigns**: Automated nurture sequences via email service provider
+- **Analytics tracking**: Conversion tracking for marketing attribution
+- **A/B testing**: Test different messaging and calls-to-action
+- **Referral program**: Waitlist members can invite colleagues
+
+<Tip>
+Waitlist campaigns are particularly effective for building anticipation before new feature launches or market expansions.
+</Tip>
+
+## Best practices
+
+When running a waitlist campaign:
+
+1. **Clear value proposition**: Explain what users gain by joining
+2. **Expected timeline**: Provide rough estimate of when access will be granted
+3. **Regular updates**: Keep waitlist engaged with progress updates
+4. **Segmented communication**: Different messaging for professionals vs. organizations
+5. **Gradual rollout**: Invite users in batches to manage onboarding capacity
+
+## Privacy and data handling
+
+<Warning>
+Waitlist data is handled according to Chilean data protection laws and Biovity's privacy policy. Users can request deletion of their data at any time before platform access is granted.
+</Warning>
+
+Email addresses are used solely for:
+- Waitlist confirmation
+- Platform launch notifications
+- Occasional updates about Biovity progress
+
+No third-party sharing without explicit consent.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication system" icon="lock" href="/features/authentication">
+    Learn how waitlist members transition to full user accounts
+  </Card>
+  
+  <Card title="User onboarding" icon="circle-check" href="/features/user-dashboard">
+    Understand the onboarding flow for new users
+  </Card>
+</CardGroup>
