@@ -1,0 +1,123 @@
+{
+  "projectType": "saas",
+  "projectName": "Biovity",
+  "projectDescription": "Chilean job platform connecting scientific professionals and students with opportunities in biotechnology, biochemistry, chemistry, and health sectors",
+  "theme": "palm",
+  "primaryColor": "#3b82f6",
+  "lightColor": "#60a5fa",
+  "darkColor": "#2563eb",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "introduction",
+              "what-is-biovity",
+              "key-features"
+            ]
+          },
+          {
+            "group": "Getting Started",
+            "pages": [
+              "getting-started/installation",
+              "getting-started/environment-setup",
+              "getting-started/database-setup",
+              "getting-started/running-locally"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/authentication",
+              "features/user-dashboard",
+              "features/job-search",
+              "features/applications",
+              "features/company-profiles",
+              "features/messaging"
+            ]
+          },
+          {
+            "group": "Architecture",
+            "pages": [
+              "architecture/project-structure",
+              "architecture/app-router",
+              "architecture/database-schema",
+              "architecture/authentication-flow"
+            ]
+          },
+          {
+            "group": "Development",
+            "pages": [
+              "development/code-style",
+              "development/components",
+              "development/styling",
+              "development/data-management"
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "deployment/environment-variables",
+              "deployment/production-build",
+              "deployment/vercel"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Authentication",
+            "pages": [
+              "api/auth/overview",
+              "api/auth/login",
+              "api/auth/register",
+              "api/auth/session"
+            ]
+          },
+          {
+            "group": "Components",
+            "pages": [
+              "api/components/ui-components",
+              "api/components/landing-components",
+              "api/components/dashboard-components"
+            ]
+          },
+          {
+            "group": "Utilities",
+            "pages": [
+              "api/utils/animations",
+              "api/utils/formatting",
+              "api/utils/validation"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Better Auth integration with custom user fields and role-based access",
+    "Employee and organization dashboards with job applications and metrics",
+    "PostgreSQL database with connection pooling and migrations",
+    "Job search and filtering system for scientific sector positions",
+    "Messaging system for candidate-employer communication",
+    "Responsive UI with TailwindCSS and GSAP animations",
+    "Waitlist and user registration flows",
+    "Salary information and company verification features"
+  ],
+  "publicApiSurface": [
+    "/api/auth/[...all] - Better Auth endpoints",
+    "/api/waitlist - Waitlist registration",
+    "/api/cron - Scheduled jobs",
+    "auth (Better Auth instance)",
+    "authClient (Client-side auth)",
+    "formatCurrency - CLP currency formatter",
+    "formatDate - Date formatting utilities",
+    "getBadgeColor - UI badge color mapping",
+    "useScrollAnimation - GSAP scroll animation hook"
+  ]
+}
